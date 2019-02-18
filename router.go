@@ -433,6 +433,103 @@ func pre_pregnancy(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, token)
 }
 
+// 处理/wgs_docx 逻辑
+func wgs_docx(w http.ResponseWriter, r *http.Request) {
+	log.Println("method:", r.Method) //获取请求的方法
+	reporType := "wgs_docx"
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		file, handler, err := r.FormFile("uploadfile")
+		if err != nil {
+			log.Println(err)
+			fmt.Fprint(w, "<p>")
+			fmt.Fprint(w, err)
+			fmt.Fprint(w, "</p>")
+		} else {
+			defer file.Close()
+			//fmt.Fprintf(w, "%v", handler.Header)
+			uploadFileName := handler.Filename
+			suffix := filepath.Ext(uploadFileName)
+			filename := strings.TrimRight(uploadFileName, suffix)
+			newName := md5sum(filename)
+			saveFileName := "./public/" + reporType + "/input/" + newName + suffix
+			if _, err := os.Stat(saveFileName); err == nil {
+				log.Println(saveFileName + "已存在，删除")
+				err = os.Remove(saveFileName)
+				if err != nil {
+					errPrint(w, err)
+				}
+			}
+			f, err := os.OpenFile(saveFileName, os.O_WRONLY|os.O_CREATE, 0666)
+			if err != nil {
+				log.Println(err)
+				fmt.Fprint(w, "<p>")
+				fmt.Fprint(w, err)
+				fmt.Fprint(w, "</p>")
+			} else {
+				defer f.Close()
+				io.Copy(f, file)
+				cmd := exec.Command("python3", "../"+reporType+"/auto_report.py", "--data-file", saveFileName, "--out-dir", "public/"+reporType+"/output")
+				out, err := cmd.CombinedOutput()
+				if err != nil {
+					log.Println(err)
+					log.Printf("%s", out)
+					fmt.Fprint(w, "<p>")
+					fmt.Fprintf(w, "<p><pre>%s</pre></p>", out)
+				} else {
+					fmt.Fprint(w, "<p>create report done:</p>")
+				}
+				outs := strings.Split(string(out), "\n")
+				var files = []string{}
+				sampleNum := "NA"
+				reportNum := "NA"
+				p1 := `number of samples (\d+)`
+				p2 := `number of reports (\d+)`
+				ph := `final.result-`
+				pe := `_BB.*`
+				reg1 := regexp.MustCompile(p1)
+				reg2 := regexp.MustCompile(p2)
+				regh := regexp.MustCompile(ph)
+				rege := regexp.MustCompile(pe)
+				filename = regh.ReplaceAllString(filename, "")
+				filename = rege.ReplaceAllString(filename, "_BB")
+				for i := range outs {
+					log.Println(outs[i])
+					match1 := reg1.FindStringSubmatch(outs[i])
+					match2 := reg2.FindStringSubmatch(outs[i])
+					if match1 != nil {
+						sampleNum = match1[1]
+					}
+					if match2 != nil {
+						reportNum = match2[1]
+					}
+					if strings.HasSuffix(outs[i], "docx") || strings.HasSuffix(outs[i], "zip") || strings.HasSuffix(outs[i], "xlsx") {
+						//fmt.Fprintf(w, "<a href='%s' target='_blank'>%s</a><br/>", "public/"+reporType+"/output/"+filepath.Base(outs[i]), filepath.Base(outs[i]))
+						files = append(files, "public/"+reporType+"/output/"+filepath.Base(outs[i]))
+					} else {
+						//fmt.Fprintf(w, "<p>%s</p>", outs[i])
+					}
+				}
+				output := "报告-" + filename + "-" + time.Now().Format("20060102") + "-" + sampleNum + "_" + reportNum + ".zip"
+				err = ZipFiles("public/"+reporType+"/output/"+output, files)
+				if err != nil {
+					log.Println(err)
+					fmt.Fprintf(w, "<p>%s</p>", err)
+					fmt.Fprint(w, "<p>zip file fail!</p>")
+				} else {
+					fmt.Fprintf(w, "<p>打包</p><a href='%s' target='_blank'>%s</a><br/>", "public/"+reporType+"/output/"+output, output)
+				}
+			}
+		}
+	}
+	crutime := time.Now().Unix()
+	h := md5.New()
+	io.WriteString(h, strconv.FormatInt(crutime, 10))
+	token := fmt.Sprintf("%x", h.Sum(nil))
+	t, _ := template.ParseFiles("template/wgs_docx.gtpl")
+	t.Execute(w, token)
+}
+
 // 处理/multi_center 逻辑
 func multi_center(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("method:", r.Method) //获取请求的方法
