@@ -25,6 +25,7 @@ func main() {
 	http.HandleFunc("/upload3", upload3)
 	http.HandleFunc("/pp2docx", pre_pregnancy)
 	http.HandleFunc("/mc2docx", multi_center)
+	http.HandleFunc("/wgs2docx", wgs_docx)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		Path := r.URL.Path
 		path := fmt.Sprintf("%s", Path)
