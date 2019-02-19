@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
 
 var (
@@ -14,6 +15,8 @@ var (
 		"web server listen port",
 	)
 )
+
+var StaticDir = make(map[string]string)
 
 func main() {
 	flag.Parse()
@@ -26,16 +29,20 @@ func main() {
 	http.HandleFunc("/pp2docx", pre_pregnancy)
 	http.HandleFunc("/mc2docx", multi_center)
 	http.HandleFunc("/wgs2docx", wgs_docx)
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		Path := r.URL.Path
-		path := fmt.Sprintf("%s", Path)
-		fmt.Println(Path)
-		//		if Path[len(Path)-1] == '/' {
-		//			http.ServeFile(w, r, "public/")
-		//		} else {
-		http.ServeFile(w, r, "public/"+path)
-		//		}
 
+	StaticDir["/static"] = "static"
+	StaticDir["/public"] = "../public"
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// static file server
+		for prefix, staticDir := range StaticDir {
+			if strings.HasPrefix(r.URL.Path, prefix) {
+				file := staticDir + r.URL.Path[len(prefix):]
+				fmt.Println(file)
+				http.ServeFile(w, r, file)
+				return
+			}
+		}
 	}) //设置访问的路由
 	fmt.Println("start")
 	err := http.ListenAndServe(*port, nil) //设置监听的端口
