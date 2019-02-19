@@ -433,13 +433,21 @@ func pre_pregnancy(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, token)
 }
 
+var typeMap = map[string]string{
+	"wgs":           "report.py/pre_pregnancy/auto_report_wgs.py",
+	"pre_pregnancy": "report.py/pre_pregnancy/auto_report.py",
+}
+
 // 处理/wgs_docx 逻辑
 func wgs_docx(w http.ResponseWriter, r *http.Request) {
 	log.Println("method:", r.Method) //获取请求的方法
-	reporType := "wgs_docx"
+	//reporType := "wgs_docx"
 	if r.Method == "POST" {
 		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
 		file, handler, err := r.FormFile("uploadfile")
+		reporType := r.FormValue("type")
+		reportFile := typeMap[reporType]
 		if err != nil {
 			log.Println(err)
 			fmt.Fprint(w, "<p>")
@@ -452,7 +460,7 @@ func wgs_docx(w http.ResponseWriter, r *http.Request) {
 			suffix := filepath.Ext(uploadFileName)
 			filename := strings.TrimRight(uploadFileName, suffix)
 			newName := md5sum(filename)
-			saveFileName := "./public/" + reporType + "/input/" + newName + suffix
+			saveFileName := "public/" + reporType + "/input/" + newName + suffix
 			if _, err := os.Stat(saveFileName); err == nil {
 				log.Println(saveFileName + "已存在，删除")
 				err = os.Remove(saveFileName)
@@ -469,7 +477,7 @@ func wgs_docx(w http.ResponseWriter, r *http.Request) {
 			} else {
 				defer f.Close()
 				io.Copy(f, file)
-				cmd := exec.Command("python3", "../"+reporType+"/auto_report.py", "--data-file", saveFileName, "--out-dir", "public/"+reporType+"/output")
+				cmd := exec.Command("python3", reportFile, "--data-file", saveFileName, "--out-dir", "public/"+reporType+"/output")
 				out, err := cmd.CombinedOutput()
 				if err != nil {
 					log.Println(err)
@@ -639,6 +647,22 @@ func sayhelloName(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("val:", strings.Join(v, ""))
 	}
 	fmt.Fprintf(w, "Hello astaxie!") //这个写入到w的是输出到客户端的
+}
+
+func logRequest(r *http.Request) {
+	fmt.Println(r.Form) //这些信息是输出到服务器端的打印信息
+	fmt.Println("path", r.URL.Path)
+	fmt.Println("scheme", r.URL.Scheme)
+	fmt.Println(r.Form["url_long"])
+	for k, v := range r.Form {
+		fmt.Println("key:", k)
+		if len(v) < 1024 {
+			fmt.Println("val:", strings.Join(v, ""))
+		} else {
+			fmt.Println("val:", "large data")
+		}
+
+	}
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
