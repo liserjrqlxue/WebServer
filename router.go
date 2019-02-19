@@ -17,6 +17,15 @@ import (
 	"time"
 )
 
+// os
+var (
+	ex, _  = os.Executable()
+	exPath = filepath.Dir(ex)
+	pSep   = string(os.PathSeparator)
+	//dbPath       = exPath + pSep + "db" + pSep
+	templatePath = exPath + pSep + "template" + pSep
+)
+
 func md5sum(str string) string {
 	byteStr := []byte(str)
 	sum := md5.Sum(byteStr)
@@ -534,7 +543,7 @@ func wgs_docx(w http.ResponseWriter, r *http.Request) {
 	h := md5.New()
 	io.WriteString(h, strconv.FormatInt(crutime, 10))
 	token := fmt.Sprintf("%x", h.Sum(nil))
-	t, _ := template.ParseFiles("template/wgs_docx.gtpl")
+	t, _ := template.ParseFiles(templatePath + "wgs_docx.gtpl")
 	t.Execute(w, token)
 }
 
