@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>上传文件</title>
+    <title>自动化报告系统</title>
     <link rel="stylesheet" href="/static/css/bootstrap.css" />
 
 </head>
