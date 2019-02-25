@@ -2,6 +2,7 @@
 <head>
     <title>上传文件</title>
     <link rel="stylesheet" href="/static/css/bootstrap.css" />
+
 </head>
 <body>
 <div class="container">
@@ -15,6 +16,7 @@
                 <select id="type" name="type" class="form-control">
                     <option value ="wgs">WGS</option>
                     <option value ="pre_pregnancy">PP100</option>
+                    <option value ="hw">海外</option>
                 </select>
             </div>
         </div>
@@ -27,10 +29,38 @@
             </div>
         </div>
 
-        <input type="hidden" name="token" value="{{.}}"/>
+        <input type="hidden" name="token" value="{{.Token}}"/>
         <button type="submit" class="btn btn-primary">Submit</button>
     </form>
+    <div>
+        {{if eq .Err ""}}
+        {{else}}
+            <div>
+                <p>Error:{{.Err}}</p>
+            </div>
+        {{end}}
+        {{if eq .Message ""}}
+        {{else}}
+            <div>
+                <p>Message:{{.Message}}</p>
+            </div>
+        {{end}}
+
+    </div>
 </div>
+
+<script>
+    var select=document.getElementById("type")
+    console.log({{.Token}})
+    console.log({{.Option}})
+    console.log({{.}})
+    for(var i=0;i < select.length;i++){
+        console.log(select[i].value)
+        if(select[i].value=={{.Option}}){
+        select.selectedIndex=i
+        }
+    }
+</script>
 
 </body>
 </html>
