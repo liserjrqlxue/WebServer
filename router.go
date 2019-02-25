@@ -150,7 +150,7 @@ func autoReport(w http.ResponseWriter, r *http.Request) {
 		suffix := filepath.Ext(uploadFileName)
 		filename := strings.TrimRight(uploadFileName, suffix)
 		newName := md5sum(filename)
-		saveFileName := inputDir + newName + suffix
+		saveFileName := path.Join(inputDir, newName+suffix)
 		if _, err := os.Stat(saveFileName); err == nil {
 			log.Println(saveFileName + "已存在，删除")
 			err = os.Remove(saveFileName)
