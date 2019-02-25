@@ -111,10 +111,12 @@ func reportErr(err error, w http.ResponseWriter, t *template.Template, info repo
 
 // 处理/autoReport 逻辑
 func autoReport(w http.ResponseWriter, r *http.Request) {
-	template.ParseFiles()
-	t, _ := template.ParseFiles(templatePath + "autoReport.gtpl")
-	log.Println("method:", r.Method) //获取请求的方法
 	var info reportInfo
+	t, err := template.ParseFiles(templatePath + "autoReport.gtpl")
+	if reportErr(err, w, t, info) {
+		return
+	}
+	log.Println("method:", r.Method) //获取请求的方法
 
 	if r.Method == "POST" {
 		r.ParseMultipartForm(32 << 20)
@@ -231,7 +233,13 @@ func sayhelloName(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("key:", k)
 		fmt.Println("val:", strings.Join(v, ""))
 	}
-	fmt.Fprintf(w, "Hello World!") //这个写入到w的是输出到客户端的
+	//fmt.Fprintf(w, "Hello World!") //这个写入到w的是输出到客户端的
+	t, err := template.ParseFiles(templatePath + "index.gtpl")
+	if err != nil {
+		fmt.Fprint(w, err)
+		return
+	}
+	t.Execute(w, nil)
 }
 
 func logRequest(r *http.Request) {
