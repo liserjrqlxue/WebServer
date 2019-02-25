@@ -33,16 +33,24 @@
         <button type="submit" class="btn btn-primary">Submit</button>
     </form>
     <div>
+        {{if eq .Href ""}}
+        {{else}}
+        <div>
+            <p><a href="{{.Href}}">报告下载</a></p>
+        </div>
+        {{end}}
         {{if eq .Err ""}}
         {{else}}
             <div>
-                <p>Error:{{.Err}}</p>
+                <p>Error:</p>
+                <pre>{{.Err}}</pre>
             </div>
         {{end}}
         {{if eq .Message ""}}
         {{else}}
             <div>
-                <p>Message:{{.Message}}</p>
+                <p>Message:</p>
+                <pre>{{.Message}}</pre>
             </div>
         {{end}}
 

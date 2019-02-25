@@ -455,11 +455,9 @@ type reportInfo struct {
 }
 
 func reportErr(err error, w http.ResponseWriter, t *template.Template, info reportInfo) bool {
-	fmt.Println(info)
 	if err != nil {
 		log.Println(err)
 		info.Err = fmt.Sprint(err)
-		fmt.Println(info)
 		t.Execute(w, info)
 		return true
 	}
@@ -522,11 +520,11 @@ func wgs_docx(w http.ResponseWriter, r *http.Request) {
 		io.Copy(f, file)
 		cmd := exec.Command("python3", reportFile, "--data-file", saveFileName, "--out-dir", outputDir)
 		out, err := cmd.CombinedOutput()
-		info.Message = fmt.Sprintf("<pre>%s</pre>", out)
+		info.Message = fmt.Sprintf("%s\n", out)
 		if reportErr(err, w, t, info) {
 			return
 		}
-		info.Message = info.Message + "<p>create report done</p>"
+		info.Message = info.Message + "create report done\n"
 
 		outs := strings.Split(string(out), "\n")
 		var files = []string{}
@@ -563,7 +561,8 @@ func wgs_docx(w http.ResponseWriter, r *http.Request) {
 			reportErr(err, w, t, info)
 			return
 		}
-		info.Message = info.Message + fmt.Sprintf("<p>打包</p><a href='%s' target='_blank'>%s</a><br/>", path.Join(outputDir, output), output)
+		info.Href = path.Join(outputDir, output)
+		info.Message = info.Message + output
 	} else {
 		r.ParseForm()
 		crutime := time.Now().Unix()
