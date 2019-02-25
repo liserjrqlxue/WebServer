@@ -48,14 +48,13 @@ func ZipFiles(filename string, files []string) error {
 	// Add files to zip
 	for _, file := range files {
 		log.Println(file)
-		zipfile, err := os.Open(file)
+		zipFile, err := os.Open(file)
 		if err != nil {
 			return err
 		}
-		defer zipfile.Close()
 
 		// Get the file information
-		info, err := zipfile.Stat()
+		info, err := zipFile.Stat()
 		if err != nil {
 			return err
 		}
@@ -76,10 +75,11 @@ func ZipFiles(filename string, files []string) error {
 		if err != nil {
 			return err
 		}
-		_, err = io.Copy(writer, zipfile)
+		_, err = io.Copy(writer, zipFile)
 		if err != nil {
 			return err
 		}
+		zipFile.Close()
 	}
 	return nil
 }
