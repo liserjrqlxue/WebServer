@@ -22,13 +22,7 @@ func main() {
 	flag.Parse()
 	// 设置访问的路由
 	http.HandleFunc("/login", login)
-	http.HandleFunc("/upload", upload)
-	http.HandleFunc("/upload2", upload2)
-	http.HandleFunc("/upload2debug", upload2debug)
-	http.HandleFunc("/upload3", upload3)
-	http.HandleFunc("/pp2docx", pre_pregnancy)
-	http.HandleFunc("/mc2docx", multi_center)
-	http.HandleFunc("/wgs2docx", wgs_docx)
+	http.HandleFunc("/autoReport", autoReport)
 
 	StaticDir["/static"] = "static"
 	StaticDir["/public"] = "../public"
@@ -43,6 +37,7 @@ func main() {
 				return
 			}
 		}
+		sayhelloName(w, r)
 	}) //设置访问的路由
 	fmt.Println("start")
 	err := http.ListenAndServe(*port, nil) //设置监听的端口
