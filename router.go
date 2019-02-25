@@ -250,7 +250,7 @@ func logRequest(r *http.Request) {
 	for k, v := range r.Form {
 		fmt.Println("key:", k)
 		if len(v) < 1024 {
-			fmt.Println("key:[%s]\tval:[%v]\n", k, v)
+			fmt.Printf("key:[%s]\tval:[%v]\n", k, v)
 		} else {
 			fmt.Printf("key:[%s]\tval: large data!\n", k)
 		}
