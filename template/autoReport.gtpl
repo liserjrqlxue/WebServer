@@ -59,10 +59,8 @@
 </div>
 
 <script>
-    var select=document.getElementById("type")
-    console.log({{.Token}})
-    console.log({{.Option}})
     console.log({{.}})
+    var select=document.getElementById("type")
     for(var i=0;i < select.length;i++){
         console.log(select[i].value)
         if(select[i].value=={{.Option}}){
