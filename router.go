@@ -272,7 +272,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func datatables(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles(templatePath + "datatable.gtpl")
+	t, err := template.ParseFiles(templatePath + "datatables.gtpl")
 	simple_util.CheckErr(err)
 	t.Execute(w, nil)
 }
