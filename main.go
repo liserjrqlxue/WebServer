@@ -26,7 +26,8 @@ func main() {
 	http.HandleFunc("/datatables", datatables)
 
 	StaticDir["/static"] = "static"
-	StaticDir["/public"] = "../public"
+	StaticDir["/public"] = "public"
+	StaticDir["/ajax"] = "ajax"
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// static file server
