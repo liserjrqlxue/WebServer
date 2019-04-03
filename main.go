@@ -23,6 +23,7 @@ func main() {
 	// 设置访问的路由
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/autoReport", autoReport)
+	http.HandleFunc("/datatables", datatables)
 
 	StaticDir["/static"] = "static"
 	StaticDir["/public"] = "../public"
@@ -39,7 +40,7 @@ func main() {
 		}
 		sayhelloName(w, r)
 	}) //设置访问的路由
-	fmt.Println("start")
+	fmt.Printf("start http://localhost%v\n", *port)
 	err := http.ListenAndServe(*port, nil) //设置监听的端口
 	if err != nil {
 		log.Fatal(err)

@@ -270,3 +270,9 @@ func login(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("password:", r.Form["password"])
 	}
 }
+
+func datatables(w http.ResponseWriter, r *http.Request) {
+	t, err := template.ParseFiles(templatePath + "datatable.gtpl")
+	simple_util.CheckErr(err)
+	t.Execute(w, nil)
+}
