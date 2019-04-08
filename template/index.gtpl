@@ -1,3 +1,4 @@
+<!doctype html>
 <html>
 <head>
     <title>Home Page</title>
@@ -13,10 +14,16 @@
     <div class="collapse navbar-collapse" id="navbarsExampleDefault">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
-                <a class="nav-link" href="#">Home<span class="sr-only">(current)</span></a>
+                <a class="nav-link" href="">Home<span class="sr-only">Home</span></a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="autoReport">报告自动化<span class="sr-only">报告自动化</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="datatables">生育研发MO<span class="sr-only">生育研发MO</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="plotReadsLocal">本地集群画reads图<span class="sr-only">本地集群画reads图</span></a>
             </li>
         </ul>
         <form class="form-inline my-2 my-lg-0">

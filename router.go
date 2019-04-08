@@ -276,3 +276,9 @@ func datatables(w http.ResponseWriter, r *http.Request) {
 	simple_util.CheckErr(err)
 	t.Execute(w, nil)
 }
+
+func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
+	t, err := template.ParseFiles(templatePath + "plotReadsLocal.gtpl")
+	simple_util.CheckErr(err)
+	t.Execute(w, nil)
+}
