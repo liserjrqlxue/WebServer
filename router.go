@@ -292,19 +292,26 @@ func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 		r.ParseMultipartForm(32 << 20)
 		logRequest(r)
 
+		if len(r.Form["prefix"]) == 0 {
+			r.Form["prefix"] = append(r.Form["prefix"], "prefix")
+		}
+
 		// token
 		crutime := time.Now().Unix()
 		token := md5sum(strconv.FormatInt(crutime, 10))
 		fmt.Printf("token:\t%v\n", token)
 		var img Img
 		img.Token = token
-		img.Src = "/public/plotReadsLocal/" + r.Form["prefix"][0] + token + "_" + r.Form["chr"][0] + r.Form["Start"][0] + ".png"
+		img.Src = "/public/plotReadsLocal/" + r.Form["prefix"][0] + token + "_" + r.Form["chr"][0] + "_" + r.Form["Start"][0] + ".png"
 		simple_util.RunCmd(
 			"/share/backup/wangyaoshen/perl5/perlbrew/perls/perl-5.26.2/bin/perl",
 			"/ifs7/B2C_SGD/PROJECT/web_reads_picture/bin/plotreads.sz.pl",
 			"-Rs", "/ifs9/BC_B2C_01A/B2C_SGD/SOFTWARES/bin/Rscript",
 			"-b", r.Form["path"][0],
-			"-c", r.Form["chr"][0], "-p", r.Form["Start"][0], "-r", "-prefix", "/public/plotReadsLocal/"+r.Form["prefix"][0]+token, "-f", "20", "-d", "-a", "-l", "100",
+			"-c", r.Form["chr"][0],
+			"-p", r.Form["Start"][0], "-r",
+			"-prefix", "public/plotReadsLocal/"+r.Form["prefix"][0]+token,
+			"-f", "20", "-d", "-a", "-l", r.Form["Plotread_Length"][0],
 		)
 		t.Execute(w, img)
 	} else {
