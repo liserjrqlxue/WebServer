@@ -282,8 +282,10 @@ type Img struct {
 	Token string
 }
 
-func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
+var plotReadsLocalDir = "public" + pSep + "plotReadsLocal"
+var plotScript = "src" + pSep + "plotreads.sz.pl"
 
+func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles(templatePath + "plotReadsLocal.gtpl")
 	simple_util.CheckErr(err)
 	log.Println("method:", r.Method)
@@ -302,18 +304,23 @@ func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 		crutime := time.Now().Unix()
 		token := md5sum(strconv.FormatInt(crutime, 10))
 		fmt.Printf("token:\t%v\n", token)
+		err := os.MkdirAll(plotReadsLocalDir, 0755)
+		simple_util.CheckErr(err)
 		var img Img
 		img.Token = token
-		img.Src = "/public/plotReadsLocal/" + r.Form["prefix"][0] + token + "_" + r.Form["chr"][0] + "_" + r.Form["Start"][0] + ".png"
-		img.Img = r.Form["prefix"][0] + token + "_" + r.Form["chr"][0] + "_" + r.Form["Start"][0] + ".png"
+		pngPrefix := r.Form["prefix"][0] + "_" + token
+		pngSuffix := "_" + r.Form["chr"][0] + "_" + r.Form["Start"][0] + ".png"
+		pngName := pngPrefix + pngSuffix
+		img.Src = pngName
+		img.Img = pngName
 		fmt.Println(
 			"/share/backup/wangyaoshen/perl5/perlbrew/perls/perl-5.26.2/bin/perl",
-			"src/plotreads.sz.pl",
+			plotScript,
 			"-Rs", "/ifs9/BC_B2C_01A/B2C_SGD/SOFTWARES/bin/Rscript",
 			"-b", r.Form["path"][0],
 			"-c", r.Form["chr"][0],
 			"-p", r.Form["Start"][0], "-r",
-			"-prefix", "public/plotReadsLocal/"+r.Form["prefix"][0]+token,
+			"-prefix", plotReadsLocalDir+pSep+pngPrefix,
 			"-f", "20", "-d", "-a", "-l", r.Form["Plotread_Length"][0],
 		)
 		simple_util.RunCmd(
@@ -323,7 +330,7 @@ func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 			"-b", r.Form["path"][0],
 			"-c", r.Form["chr"][0],
 			"-p", r.Form["Start"][0], "-r",
-			"-prefix", "public/plotReadsLocal/"+r.Form["prefix"][0]+token,
+			"-prefix", plotReadsLocalDir+"/"+r.Form["prefix"][0]+token,
 			"-f", "20", "-d", "-a", "-l", r.Form["Plotread_Length"][0],
 		)
 		t.Execute(w, img)
