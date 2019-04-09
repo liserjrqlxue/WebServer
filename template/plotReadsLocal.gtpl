@@ -35,13 +35,20 @@
 <main>
     <div class="jumbotron"></div>
     <form enctype="multipart/form-data" action="/plotReadsLocal" method="post" target="_blank">
+        <div class="form-group row">
+            <label for="bamPath" class="col-sm-2 col-form-label">Prefix</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" id="prefix" name="prefix"
+                       aria-describedby="prefixHelp" placeholder="Enter Prefix">
+                </input>
+            </div>
+        </div>
     <div class="form-group row">
         <label for="bamPath" class="col-sm-2 col-form-label">Bam路径</label>
         <div class="col-sm-10">
             <input type="text" class="form-control" id="bamPath" name="path"
                    aria-describedby="bamPathHelp" placeholder="Enter Bam Path">
             </input>
-
         </div>
     </div>
     <div class="form-group row">
@@ -120,6 +127,7 @@
     </div>
     <button type="submit" class="btn btn-primary btn-block">Submit</button>
 </form>
+    <img src="{{.Src}}"/>
 </main>
 <footer class="container">
     <p>&copy; BGI 2019</p>
