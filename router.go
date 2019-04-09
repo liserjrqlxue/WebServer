@@ -300,18 +300,22 @@ func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 		if r.Form["position"][0] != "at" && len(r.Form["End"]) > 0 {
 			r.Form["Start"][0] = r.Form["Start"][0] + r.Form["position"][0] + r.Form["End"][0]
 		}
+
+		y, m, _ := time.Now().Date()
+		tag := fmt.Sprint("%d-%v", y, m)
+		err := os.MkdirAll(plotReadsLocalDir+pSep+tag, 0755)
+		simple_util.CheckErr(err)
 		// token
 		crutime := time.Now().Unix()
 		token := md5sum(strconv.FormatInt(crutime, 10))
 		fmt.Printf("token:\t%v\n", token)
-		err := os.MkdirAll(plotReadsLocalDir, 0755)
-		simple_util.CheckErr(err)
+
 		var img Img
 		img.Token = token
 		pngPrefix := r.Form["prefix"][0] + "_" + token
 		pngSuffix := "_" + r.Form["chr"][0] + "_" + r.Form["Start"][0] + ".png"
 		pngName := pngPrefix + pngSuffix
-		img.Src = pngName
+		img.Src = tag + "/" + pngName
 		img.Img = pngName
 		fmt.Println(
 			"/share/backup/wangyaoshen/perl5/perlbrew/perls/perl-5.26.2/bin/perl",
@@ -320,7 +324,7 @@ func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 			"-b", r.Form["path"][0],
 			"-c", r.Form["chr"][0],
 			"-p", r.Form["Start"][0], "-r",
-			"-prefix", plotReadsLocalDir+pSep+pngPrefix,
+			"-prefix", plotReadsLocalDir+pSep+tag+pSep+pngPrefix,
 			"-f", "20", "-d", "-a", "-l", r.Form["Plotread_Length"][0],
 		)
 		simple_util.RunCmd(
@@ -330,7 +334,7 @@ func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 			"-b", r.Form["path"][0],
 			"-c", r.Form["chr"][0],
 			"-p", r.Form["Start"][0], "-r",
-			"-prefix", plotReadsLocalDir+"/"+r.Form["prefix"][0]+token,
+			"-prefix", plotReadsLocalDir+pSep+tag+pSep+pngPrefix,
 			"-f", "20", "-d", "-a", "-l", r.Form["Plotread_Length"][0],
 		)
 		t.Execute(w, img)
