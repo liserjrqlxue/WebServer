@@ -295,7 +295,9 @@ func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 		if len(r.Form["prefix"]) == 0 {
 			r.Form["prefix"] = append(r.Form["prefix"], "prefix")
 		}
-
+		if r.Form["position"][0] != "at" && len(r.Form["End"]) > 0 {
+			r.Form["Start"][0] = r.Form["Start"][0] + r.Form["position"][0] + r.Form["End"][0]
+		}
 		// token
 		crutime := time.Now().Unix()
 		token := md5sum(strconv.FormatInt(crutime, 10))
@@ -303,6 +305,7 @@ func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 		var img Img
 		img.Token = token
 		img.Src = "/public/plotReadsLocal/" + r.Form["prefix"][0] + token + "_" + r.Form["chr"][0] + "_" + r.Form["Start"][0] + ".png"
+		img.Img = r.Form["prefix"][0] + token + "_" + r.Form["chr"][0] + "_" + r.Form["Start"][0] + ".png"
 		simple_util.RunCmd(
 			"/share/backup/wangyaoshen/perl5/perlbrew/perls/perl-5.26.2/bin/perl",
 			"/ifs7/B2C_SGD/PROJECT/web_reads_picture/bin/plotreads.sz.pl",

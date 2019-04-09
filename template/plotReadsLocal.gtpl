@@ -43,91 +43,98 @@
                 </input>
             </div>
         </div>
-    <div class="form-group row">
-        <label for="bamPath" class="col-sm-2 col-form-label">Bam路径</label>
-        <div class="col-sm-10">
-            <input type="text" class="form-control" id="bamPath" name="path" required
-                   aria-describedby="bamPathHelp" placeholder="Enter Bam Path">
-            </input>
+        <div class="form-group row">
+            <label for="bamPath" class="col-sm-2 col-form-label">Bam路径</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" id="bamPath" name="path" required="required"
+                       aria-describedby="bamPathHelp" placeholder="Enter Bam Path">
+                </input>
+            </div>
         </div>
-    </div>
-    <div class="form-group row">
-        <label for="chr" class="col-sm-2 col-form-label">Chromosome</label>
-        <div class="col-sm-4">
-            <select class="form-control" id="chr" name="chr" required>
-                <option value="chr1">chr1</option>
-                <option value="chr2">chr2</option>
-                <option value="chr3">chr3</option>
-                <option value="chr4">chr4</option>
-                <option value="chr5">chr5</option>
-                <option value="chr6">chr6</option>
-                <option value="chr7">chr7</option>
-                <option value="chr8">chr8</option>
-                <option value="chr9">chr9</option>
-                <option value="chr10">chr10</option>
-                <option value="chr11">chr11</option>
-                <option value="chr12">chr12</option>
-                <option value="chr13">chr13</option>
-                <option value="chr14">chr14</option>
-                <option value="chr15">chr15</option>
-                <option value="chr16">chr16</option>
-                <option value="chr17">chr17</option>
-                <option value="chr18">chr18</option>
-                <option value="chr19">chr19</option>
-                <option value="chr20">chr20</option>
-                <option value="chr21">chr21</option>
-                <option value="chr22">chr22</option>
-                <option value="chrX">chrX</option>
-                <option value="chrY">chrY</option>
-                <option value="chrM">chrM </option>
-            </select>
+        <div class="form-group row">
+            <label for="chr" class="col-sm-2 col-form-label">Chromosome</label>
+            <div class="col-sm-4">
+                <select class="form-control" id="chr" name="chr" required="required">
+                    <option value="chr1">chr1</option>
+                    <option value="chr2">chr2</option>
+                    <option value="chr3">chr3</option>
+                    <option value="chr4">chr4</option>
+                    <option value="chr5">chr5</option>
+                    <option value="chr6">chr6</option>
+                    <option value="chr7">chr7</option>
+                    <option value="chr8">chr8</option>
+                    <option value="chr9">chr9</option>
+                    <option value="chr10">chr10</option>
+                    <option value="chr11">chr11</option>
+                    <option value="chr12">chr12</option>
+                    <option value="chr13">chr13</option>
+                    <option value="chr14">chr14</option>
+                    <option value="chr15">chr15</option>
+                    <option value="chr16">chr16</option>
+                    <option value="chr17">chr17</option>
+                    <option value="chr18">chr18</option>
+                    <option value="chr19">chr19</option>
+                    <option value="chr20">chr20</option>
+                    <option value="chr21">chr21</option>
+                    <option value="chr22">chr22</option>
+                    <option value="chrX">chrX</option>
+                    <option value="chrY">chrY</option>
+                    <option value="chrM">chrM </option>
+                </select>
 
+            </div>
+            <label for="readsLength" class="col-sm-2 col-form-label">Reads Length</label>
+            <div class="col-sm-4">
+                <select class="form-control" id="readsLength" name="Plotread_Length">
+                    <option value="100">100bp</option>
+                    <option value="150">150bp</option>
+                </select>
+            </div>
         </div>
-        <label for="readsLength" class="col-sm-2 col-form-label">Reads Length</label>
-        <div class="col-sm-4">
-            <select class="form-control" id="readsLength" name="Plotread_Length">
-                <option value="100">100bp</option>
-                <option value="150">150bp</option>
-            </select>
+        <div class="form-group row">
+            <label for="startPos" class="col-sm-2 col-form-label">Start</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" id="startPos" name="Start" required="required"
+                       aria-describedby="StartHelp" placeholder="Enter Start Position">
+                </input>
+            </div>
+            <label for="endPos" class="col-sm-2 col-form-label">End</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" id="endPos" name="End"
+                       aria-describedby="StartHelp" placeholder="Enter End Position">
+                </input>
+            </div>
         </div>
+        <div class="form-group">
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="position" id="at" value="at" checked="checked">
+                </input>
+                <label class="form-check-label" for="at">
+                    at
+                </label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="position" id="in" value="in">
+                </input>
+                <label class="form-check-label" for="in">
+                    in
+                </label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="position" id="to" value="to">
+                </input>
+                <label class="form-check-label" for="to">
+                    to
+                </label>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Submit</button>
+    </form>
+    <div class="jumbotron">
+        {{.Img}}
+        <img src="{{.Src}}"/>
     </div>
-    <div class="form-group row">
-        <label for="startPos" class="col-sm-2 col-form-label">Start</label>
-        <div class="col-sm-4">
-            <input type="text" class="form-control" id="startPos" name="Start" required
-                   aria-describedby="StartHelp" placeholder="Enter Start Position">
-            </input>
-        </div>
-        <label for="endPos" class="col-sm-2 col-form-label">End</label>
-        <div class="col-sm-4">
-            <input type="text" class="form-control" id="endPos" name="End"
-                   aria-describedby="StartHelp" placeholder="Enter End Position">
-            </input>
-        </div>
-    </div>
-    <div class="form-group">
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="position" id="at" value="at" checked></input>
-            <label class="form-check-label" for="at">
-                at
-            </label>
-        </div>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="position" id="between" value="between"></input>
-            <label class="form-check-label" for="between">
-                between
-            </label>
-        </div>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="position" id="from" value="from"></input>
-            <label class="form-check-label" for="from">
-                from
-            </label>
-        </div>
-    </div>
-    <button type="submit" class="btn btn-primary btn-block">Submit</button>
-</form>
-    <img src="{{.Src}}"/>
+
 </main>
 <footer class="container">
     <p>&copy; BGI 2019</p>
