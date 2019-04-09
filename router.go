@@ -248,13 +248,12 @@ func logRequest(r *http.Request) {
 	fmt.Println("scheme", r.URL.Scheme)
 	fmt.Println(r.Form["url_long"])
 	for k, v := range r.Form {
-		fmt.Println("key:", k)
+		fmt.Printf("key:%s\t", k)
 		if len(v) < 1024 {
 			fmt.Printf("key:[%s]\tval:[%v]\n", k, v)
 		} else {
 			fmt.Printf("key:[%s]\tval: large data!\n", k)
 		}
-
 	}
 }
 
@@ -278,7 +277,17 @@ func datatables(w http.ResponseWriter, r *http.Request) {
 }
 
 func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
+
 	t, err := template.ParseFiles(templatePath + "plotReadsLocal.gtpl")
 	simple_util.CheckErr(err)
-	t.Execute(w, nil)
+	log.Println("method:", r.Method)
+
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+	} else {
+		r.ParseForm()
+		logRequest(r)
+		t.Execute(w, nil)
+	}
 }
