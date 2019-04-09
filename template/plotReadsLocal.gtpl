@@ -46,7 +46,7 @@
     <div class="form-group row">
         <label for="bamPath" class="col-sm-2 col-form-label">Bam路径</label>
         <div class="col-sm-10">
-            <input type="text" class="form-control" id="bamPath" name="path"
+            <input type="text" class="form-control" id="bamPath" name="path" required
                    aria-describedby="bamPathHelp" placeholder="Enter Bam Path">
             </input>
         </div>
@@ -54,7 +54,7 @@
     <div class="form-group row">
         <label for="chr" class="col-sm-2 col-form-label">Chromosome</label>
         <div class="col-sm-4">
-            <select class="form-control" id="chr" name="chr">
+            <select class="form-control" id="chr" name="chr" required>
                 <option value="chr1">chr1</option>
                 <option value="chr2">chr2</option>
                 <option value="chr3">chr3</option>
@@ -94,7 +94,7 @@
     <div class="form-group row">
         <label for="startPos" class="col-sm-2 col-form-label">Start</label>
         <div class="col-sm-4">
-            <input type="text" class="form-control" id="startPos" name="Start"
+            <input type="text" class="form-control" id="startPos" name="Start" required
                    aria-describedby="StartHelp" placeholder="Enter Start Position">
             </input>
         </div>
