@@ -132,7 +132,7 @@
     </form>
     <div class="jumbotron">
         {{.Img}}
-        <img src="{{.Src}}"/>
+        <img src="/public/plotReadsLocal/{{.Src}}"/>
     </div>
 
 </main>
