@@ -306,9 +306,19 @@ func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 		img.Token = token
 		img.Src = "/public/plotReadsLocal/" + r.Form["prefix"][0] + token + "_" + r.Form["chr"][0] + "_" + r.Form["Start"][0] + ".png"
 		img.Img = r.Form["prefix"][0] + token + "_" + r.Form["chr"][0] + "_" + r.Form["Start"][0] + ".png"
+		fmt.Println(
+			"/share/backup/wangyaoshen/perl5/perlbrew/perls/perl-5.26.2/bin/perl",
+			"src/plotreads.sz.pl",
+			"-Rs", "/ifs9/BC_B2C_01A/B2C_SGD/SOFTWARES/bin/Rscript",
+			"-b", r.Form["path"][0],
+			"-c", r.Form["chr"][0],
+			"-p", r.Form["Start"][0], "-r",
+			"-prefix", "public/plotReadsLocal/"+r.Form["prefix"][0]+token,
+			"-f", "20", "-d", "-a", "-l", r.Form["Plotread_Length"][0],
+		)
 		simple_util.RunCmd(
 			"/share/backup/wangyaoshen/perl5/perlbrew/perls/perl-5.26.2/bin/perl",
-			"/ifs7/B2C_SGD/PROJECT/web_reads_picture/bin/plotreads.sz.pl",
+			"src/plotreads.sz.pl",
 			"-Rs", "/ifs9/BC_B2C_01A/B2C_SGD/SOFTWARES/bin/Rscript",
 			"-b", r.Form["path"][0],
 			"-c", r.Form["chr"][0],
