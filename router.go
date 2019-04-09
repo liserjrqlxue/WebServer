@@ -276,6 +276,12 @@ func datatables(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, nil)
 }
 
+type Img struct {
+	Img   string
+	Src   string
+	Token string
+}
+
 func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 
 	t, err := template.ParseFiles(templatePath + "plotReadsLocal.gtpl")
@@ -285,6 +291,22 @@ func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		r.ParseMultipartForm(32 << 20)
 		logRequest(r)
+
+		// token
+		crutime := time.Now().Unix()
+		token := md5sum(strconv.FormatInt(crutime, 10))
+		fmt.Printf("token:\t%v\n", token)
+		var img Img
+		img.Token = token
+		img.Src = "/public/plotReadsLocal/" + r.Form["prefix"][0] + token + "_" + r.Form["chr"][0] + r.Form["Start"][0] + ".png"
+		simple_util.RunCmd(
+			"/share/backup/wangyaoshen/perl5/perlbrew/perls/perl-5.26.2/bin/perl",
+			"/ifs7/B2C_SGD/PROJECT/web_reads_picture/bin/plotreads.sz.pl",
+			"-Rs", "/ifs9/BC_B2C_01A/B2C_SGD/SOFTWARES/bin/Rscript",
+			"-b", r.Form["path"][0],
+			"-c", r.Form["chr"][0], "-p", r.Form["Start"][0], "-r", "-prefix", "/public/plotReadsLocal/"+r.Form["prefix"][0]+token, "-f", "20", "-d", "-a", "-l", "100",
+		)
+		t.Execute(w, img)
 	} else {
 		r.ParseForm()
 		logRequest(r)
