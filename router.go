@@ -280,39 +280,41 @@ type Img struct {
 	Img   string
 	Src   string
 	Token string
+	Title string
 }
 
 var plotReadsLocalDir = "public" + pSep + "plotReadsLocal"
 var plotScript = "src" + pSep + "plotreads.sz.pl"
 
 func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles(templatePath + "plotReadsLocal.gtpl")
+	t, err := template.ParseFiles(templatePath+"header.gtpl", templatePath+"plotReadsLocal.gtpl")
 	simple_util.CheckErr(err)
-	log.Println("method:", r.Method)
 
+	var img Img
+	img.Title = "本地集群画reads图"
+	// token
+	crutime := time.Now().Unix()
+	token := md5sum(strconv.FormatInt(crutime, 10))
+	fmt.Printf("token:\t%v\n", token)
+	img.Token = token
+
+	log.Println("method:", r.Method)
 	if r.Method == "POST" {
 		r.ParseMultipartForm(32 << 20)
 		logRequest(r)
 
-		if len(r.Form["prefix"]) == 0 {
-			r.Form["prefix"] = append(r.Form["prefix"], "prefix")
-		}
+		prefix := r.FormValue("prefix")
+
 		if r.Form["position"][0] != "at" && len(r.Form["End"]) > 0 {
 			r.Form["Start"][0] = r.Form["Start"][0] + r.Form["position"][0] + r.Form["End"][0]
 		}
 
 		y, m, _ := time.Now().Date()
-		tag := fmt.Sprint("%d-%v", y, m)
+		tag := fmt.Sprintf("%d-%v", y, m)
 		err := os.MkdirAll(plotReadsLocalDir+pSep+tag, 0755)
 		simple_util.CheckErr(err)
-		// token
-		crutime := time.Now().Unix()
-		token := md5sum(strconv.FormatInt(crutime, 10))
-		fmt.Printf("token:\t%v\n", token)
 
-		var img Img
-		img.Token = token
-		pngPrefix := r.Form["prefix"][0] + "_" + token
+		pngPrefix := prefix + "_" + token
 		pngSuffix := "_" + r.Form["chr"][0] + "_" + r.Form["Start"][0] + ".png"
 		pngName := pngPrefix + pngSuffix
 		img.Src = tag + "/" + pngName
@@ -337,10 +339,10 @@ func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 			"-prefix", plotReadsLocalDir+pSep+tag+pSep+pngPrefix,
 			"-f", "20", "-d", "-a", "-l", r.Form["Plotread_Length"][0],
 		)
-		t.Execute(w, img)
+		t.ExecuteTemplate(w, "plotReadsLocal", img)
 	} else {
 		r.ParseForm()
 		logRequest(r)
-		t.Execute(w, nil)
+		t.ExecuteTemplate(w, "plotReadsLocal", img)
 	}
 }
