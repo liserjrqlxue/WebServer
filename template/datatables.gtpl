@@ -38,6 +38,16 @@
         src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js">
 </script>
 <div class="jumbotron"></div>
+<div class="container">
+    <div class="form-inline">
+        <label for="searchNo">项目编号</label>
+        <input type="text" id="searchNo" name="searchNo" class="form-control col-sm-6" placeholder="Search 项目编号" aria-label="Search"></input>
+    </div>
+    <div class="form-inline">
+        <label for="searchName">项目名称</label>
+        <input type="text" id="searchName" name="searchName" class="form-control col-sm-6" placeholder="Search 项目名称" aria-label="Search"></input>
+    </div>
+</div>
 <table id="example" class="display" style="width:100%">
     <thead>
     <tr>
@@ -56,34 +66,9 @@
             A000(未上线领料系统)</th>
     </tr>
     </thead>
-    <tfoot>
-    <tr>
-        <th>工单对应的研发项目编码（必填）</th>
-        <th>工单对应的研发项目名称（必填）</th>
-        <th>项目负责人</th>
-        <th>天津华大医学检验所有限公司
-            A230(已上线领料系统)</th>
-        <th>武汉华大医学检验所有限公司
-            A080(已上线领料系统)</th>
-        <th>深圳华大基因科技服务有限公司
-            A040(已上线领料系统)</th>
-        <th>深圳华大基因科技服务有限公司天津分公司
-            A520(已上线领料系统</th>
-        <th>深圳华大基因股份有限公司
-            A000(未上线领料系统)</th>
-    </tr>
-    </tfoot>
 </table>
 <script>
     $(document).ready(function() {
-        // Setup - add a text input to each footer cell
-        $('#example tfoot th').each(
-            function(){
-                var title = $(this).text();
-                $(this).html('<input type="text" placeholder="Search '+title+'" />');
-            }
-        );
-
         // DataTable
         var table = $('#example').DataTable({
             //"ajax":"/ajax/data/arrays.txt"
@@ -100,20 +85,14 @@
             ]
         });
 
-        // Apply the search
-        table.columns().every(
-            function(){
-                var that=this;
-                $('input',this.footer()).on(
-                    'keyup change',
-                    function(){
-                        if(that.search()!==this.value){
-                            that.search(this.value).draw();
-                        }
-                    }
-                );
-            }
-        );
+        table.columns(0).search("MO").draw()
+
+        $('#searchNo').on('keyup click',function() {
+           table.columns(0).search($('#searchNo').val().trim()).draw()
+        });
+        $('#searchName').on('keyup click',function() {
+           table.columns(1).search($('#searchName').val().trim()).draw()
+        });
     });
 </script>
 </body>
