@@ -346,3 +346,31 @@ func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 		t.ExecuteTemplate(w, "plotReadsLocal", img)
 	}
 }
+
+func upload(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+
+	var img Img
+	img.Title = "上传文件"
+	// token
+	crutime := time.Now().Unix()
+	token := md5sum(strconv.FormatInt(crutime, 10))
+	fmt.Printf("token:\t%v\n", token)
+	img.Token = token
+
+	if r.Method == "GET" {
+		t, err := template.ParseFiles(templatePath + "upload.gtpl")
+		simple_util.CheckErr(err)
+		t.Execute(w, img)
+	} else {
+		r.ParseMultipartForm(32 << 20)
+		file, handler, err := r.FormFile("uploadfile")
+		simple_util.CheckErr(err)
+		defer file.Close()
+		fmt.Fprintf(w, "%v", handler.Header)
+		f, err := os.Create("public" + pSep + handler.Filename)
+		simple_util.CheckErr(err)
+		defer f.Close()
+		io.Copy(f, file)
+	}
+}
