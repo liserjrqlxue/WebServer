@@ -28,10 +28,14 @@ var (
 )
 
 type Infos struct {
-	Img   string
-	Src   string
-	Token string
-	Title string
+	Option  string
+	Img     string
+	Src     string
+	Token   string
+	Title   string
+	Err     string
+	Message string
+	Href    string
 }
 
 func md5sum(str string) string {
@@ -103,15 +107,7 @@ var typeMap = map[string]string{
 	"multi_center":  "report.py/pre_pregnancy/auto_report_dzx.py",
 }
 
-type reportInfo struct {
-	Option  string
-	Token   string
-	Err     string
-	Message string
-	Href    string
-}
-
-func reportErr(err error, w http.ResponseWriter, t *template.Template, info reportInfo) bool {
+func reportErr(err error, w http.ResponseWriter, t *template.Template, info Infos) bool {
 	if err != nil {
 		log.Println(err)
 		info.Err = fmt.Sprint(err)
@@ -123,8 +119,10 @@ func reportErr(err error, w http.ResponseWriter, t *template.Template, info repo
 
 // 处理/autoReport 逻辑
 func autoReport(w http.ResponseWriter, r *http.Request) {
-	var info reportInfo
-	t, err := template.ParseFiles(templatePath + "autoReport.gtpl")
+	var info Infos
+	info.Token = createToken()
+
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html", templatePath+"autoReport.html")
 	if reportErr(err, w, t, info) {
 		return
 	}
@@ -143,8 +141,6 @@ func autoReport(w http.ResponseWriter, r *http.Request) {
 		defer simple_util.DeferClose(file)
 
 		info.Token = r.FormValue("token")
-		info.Option = r.FormValue("type")
-
 		reportFile := typeMap[info.Option]
 		inputDir := path.Join("public", info.Option, "input")
 		outputDir := path.Join("public", info.Option, "output")
@@ -224,14 +220,9 @@ func autoReport(w http.ResponseWriter, r *http.Request) {
 		info.Message = info.Message + output
 	} else {
 		r.ParseForm()
-		crutime := time.Now().Unix()
-		h := md5.New()
-		io.WriteString(h, strconv.FormatInt(crutime, 10))
-		token := fmt.Sprintf("%x", h.Sum(nil))
-		info.Token = token
 		info.Option = r.FormValue("type")
 	}
-	t.Execute(w, info)
+	t.ExecuteTemplate(w, "autoReport", info)
 }
 
 func sayhelloName(w http.ResponseWriter, r *http.Request) {
@@ -246,12 +237,16 @@ func sayhelloName(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("val:", strings.Join(v, ""))
 	}
 	//fmt.Fprintf(w, "Hello World!") //这个写入到w的是输出到客户端的
-	t, err := template.ParseFiles(templatePath + "index.gtpl")
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html", templatePath+"index.html")
 	if err != nil {
 		fmt.Fprint(w, err)
 		return
 	}
-	t.Execute(w, nil)
+
+	var Info Infos
+	Info.Title = "Home Page"
+	Info.Token = createToken()
+	t.ExecuteTemplate(w, "index", Info)
 }
 
 func logRequest(r *http.Request) {
@@ -282,21 +277,11 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func datatables(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"datatables.gtpl")
-	simple_util.CheckErr(err)
-
-	var Info Infos
-	Info.Title = "生育研发MO"
-	Info.Token = createToken()
-	t.ExecuteTemplate(w, "datatables", Info)
-}
-
 var plotReadsLocalDir = "public" + pSep + "plotReadsLocal"
 var plotScript = "src" + pSep + "plotreads.sz.pl"
 
 func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"plotReadsLocal.gtpl")
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html", templatePath+"plotReadsLocal.html")
 	simple_util.CheckErr(err)
 
 	var Info Infos
@@ -344,14 +329,12 @@ func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 			"-prefix", plotReadsLocalDir+pSep+tag+pSep+pngPrefix,
 			"-f", "20", "-d", "-a", "-l", r.Form["Plotread_Length"][0],
 		)
-		t.ExecuteTemplate(w, "plotReadsLocal", Info)
 	} else {
 		r.ParseForm()
 		logRequest(r)
-		t.ExecuteTemplate(w, "plotReadsLocal", Info)
 	}
+	t.ExecuteTemplate(w, "plotReadsLocal", Info)
 }
-
 func upload(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("method:", r.Method)
 
@@ -360,7 +343,7 @@ func upload(w http.ResponseWriter, r *http.Request) {
 	Info.Token = createToken()
 
 	if r.Method == "GET" {
-		t, err := template.ParseFiles(templatePath + "upload.gtpl")
+		t, err := template.ParseFiles(templatePath + "upload.html")
 		simple_util.CheckErr(err)
 		t.Execute(w, Info)
 	} else {
