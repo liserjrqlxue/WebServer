@@ -24,7 +24,7 @@ func main() {
 	// 设置访问的路由
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/autoReport", autoReport)
-	http.HandleFunc("/datatables", datatables)
+	http.HandleFunc("/datatables", router.LoadMO)
 	http.HandleFunc("/plotReadsLocal", plotReadsLocal)
 	http.HandleFunc("/upload", upload)
 	http.HandleFunc("/updateMO", router.UpdateMO)

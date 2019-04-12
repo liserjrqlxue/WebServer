@@ -3,7 +3,6 @@ package main
 import (
 	"archive/zip"
 	"crypto/md5"
-	"encoding/json"
 	"fmt"
 	"github.com/liserjrqlxue/simple-util"
 	"html/template"
@@ -374,37 +373,5 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		simple_util.CheckErr(err)
 		defer f.Close()
 		io.Copy(f, file)
-	}
-}
-
-func updateMO(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("method:", r.Method)
-
-	var Info Infos
-	Info.Title = "更新MO"
-	Info.Token = createToken()
-
-	if r.Method == "GET" {
-		t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html", templatePath+"updateMO.html")
-		simple_util.CheckErr(err)
-		t.ExecuteTemplate(w, "updateMO", Info)
-	} else {
-		r.ParseMultipartForm(32 << 20)
-		file, handler, err := r.FormFile("uploadfile")
-		simple_util.CheckErr(err)
-		defer file.Close()
-		fmt.Fprintf(w, "%v", handler.Header)
-		f, err := os.Create("public" + pSep + handler.Filename)
-		simple_util.CheckErr(err)
-		defer f.Close()
-		_, err = io.Copy(f, file)
-		simple_util.CheckErr(err)
-		_, mapArray := simple_util.Sheet2MapArray("public"+pSep+handler.Filename, "Sheet1")
-		var db = map[string][]map[string]string{
-			"data": mapArray,
-		}
-		jsonByte, err := json.MarshalIndent(db, "", "\t")
-		simple_util.CheckErr(err)
-		simple_util.Json2file(jsonByte, "public"+pSep+handler.Filename+".Sheet1.json")
 	}
 }
