@@ -284,7 +284,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func datatables(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles(templatePath+"header.gtpl", templatePath+"datatables.gtpl")
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"datatables.gtpl")
 	simple_util.CheckErr(err)
 
 	var Info Infos
@@ -297,7 +297,7 @@ var plotReadsLocalDir = "public" + pSep + "plotReadsLocal"
 var plotScript = "src" + pSep + "plotreads.sz.pl"
 
 func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles(templatePath+"header.gtpl", templatePath+"plotReadsLocal.gtpl")
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"plotReadsLocal.gtpl")
 	simple_util.CheckErr(err)
 
 	var Info Infos
@@ -385,7 +385,7 @@ func updateMO(w http.ResponseWriter, r *http.Request) {
 	Info.Token = createToken()
 
 	if r.Method == "GET" {
-		t, err := template.ParseFiles(templatePath+"header.gtpl", templatePath+"updateMO.gtpl")
+		t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html", templatePath+"updateMO.html")
 		simple_util.CheckErr(err)
 		t.ExecuteTemplate(w, "updateMO", Info)
 	} else {

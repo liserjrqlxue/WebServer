@@ -5,6 +5,15 @@
     <title>{{.Title}}</title>
     <link rel="stylesheet" href="/static/css/bootstrap.css" />
 </head>
+<style>
+    html,
+    body {
+        overflow-x: hidden; /* Prevent scroll on narrow devices */
+    }
+    body {
+        padding-top: 56px;
+    }
+</style>
 <body>
 <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
     <a class="navbar-brand" href="#">Navbar</a>
@@ -18,13 +27,13 @@
                 <a class="nav-link" href="/">Home<span class="sr-only">Home</span></a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="autoReport">报告自动化<span class="sr-only">报告自动化</span></a>
+                <a class="nav-link" href="/autoReport">报告自动化<span class="sr-only">报告自动化</span></a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="datatables">生育研发MO<span class="sr-only">生育研发MO</span></a>
+                <a class="nav-link" href="/datatables">生育研发MO<span class="sr-only">生育研发MO</span></a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="plotReadsLocal">本地集群画reads图<span class="sr-only">本地集群画reads图</span></a>
+                <a class="nav-link" href="/plotReadsLocal">本地集群画reads图<span class="sr-only">本地集群画reads图</span></a>
             </li>
         </ul>
         <form class="form-inline my-2 my-lg-0">
@@ -33,5 +42,4 @@
         </form>
     </div>
 </nav>
-<div class="jumbotron">{{.Title}}</div>
 {{end}}
