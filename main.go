@@ -26,6 +26,7 @@ func main() {
 	http.HandleFunc("/datatables", datatables)
 	http.HandleFunc("/plotReadsLocal", plotReadsLocal)
 	http.HandleFunc("/upload", upload)
+	http.HandleFunc("/updateMO", updateMO)
 
 	StaticDir["/static"] = "static"
 	StaticDir["/public"] = "public"

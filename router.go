@@ -3,6 +3,7 @@ package main
 import (
 	"archive/zip"
 	"crypto/md5"
+	"encoding/json"
 	"fmt"
 	"github.com/liserjrqlxue/simple-util"
 	"html/template"
@@ -27,11 +28,23 @@ var (
 	templatePath = exPath + pSep + "template" + pSep
 )
 
+type Infos struct {
+	Img   string
+	Src   string
+	Token string
+	Title string
+}
+
 func md5sum(str string) string {
 	byteStr := []byte(str)
 	sum := md5.Sum(byteStr)
 	sumStr := fmt.Sprintf("%x", sum)
 	return sumStr
+}
+
+func createToken() string {
+	// token
+	return md5sum(strconv.FormatInt(time.Now().Unix(), 10))
 }
 
 // ZipFiles compresses one or many files into a single zip archive file
@@ -271,16 +284,13 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func datatables(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles(templatePath + "datatables.gtpl")
+	t, err := template.ParseFiles(templatePath+"header.gtpl", templatePath+"datatables.gtpl")
 	simple_util.CheckErr(err)
-	t.Execute(w, nil)
-}
 
-type Img struct {
-	Img   string
-	Src   string
-	Token string
-	Title string
+	var Info Infos
+	Info.Title = "生育研发MO"
+	Info.Token = createToken()
+	t.ExecuteTemplate(w, "datatables", Info)
 }
 
 var plotReadsLocalDir = "public" + pSep + "plotReadsLocal"
@@ -290,13 +300,9 @@ func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles(templatePath+"header.gtpl", templatePath+"plotReadsLocal.gtpl")
 	simple_util.CheckErr(err)
 
-	var img Img
-	img.Title = "本地集群画reads图"
-	// token
-	crutime := time.Now().Unix()
-	token := md5sum(strconv.FormatInt(crutime, 10))
-	fmt.Printf("token:\t%v\n", token)
-	img.Token = token
+	var Info Infos
+	Info.Title = "本地集群画reads图"
+	Info.Token = createToken()
 
 	log.Println("method:", r.Method)
 	if r.Method == "POST" {
@@ -314,11 +320,11 @@ func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 		err := os.MkdirAll(plotReadsLocalDir+pSep+tag, 0755)
 		simple_util.CheckErr(err)
 
-		pngPrefix := prefix + "_" + token
+		pngPrefix := prefix + "_" + Info.Token
 		pngSuffix := "_" + r.Form["chr"][0] + "_" + r.Form["Start"][0] + ".png"
 		pngName := pngPrefix + pngSuffix
-		img.Src = tag + "/" + pngName
-		img.Img = pngName
+		Info.Src = tag + "/" + pngName
+		Info.Img = pngName
 		fmt.Println(
 			"/share/backup/wangyaoshen/perl5/perlbrew/perls/perl-5.26.2/bin/perl",
 			plotScript,
@@ -339,29 +345,25 @@ func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 			"-prefix", plotReadsLocalDir+pSep+tag+pSep+pngPrefix,
 			"-f", "20", "-d", "-a", "-l", r.Form["Plotread_Length"][0],
 		)
-		t.ExecuteTemplate(w, "plotReadsLocal", img)
+		t.ExecuteTemplate(w, "plotReadsLocal", Info)
 	} else {
 		r.ParseForm()
 		logRequest(r)
-		t.ExecuteTemplate(w, "plotReadsLocal", img)
+		t.ExecuteTemplate(w, "plotReadsLocal", Info)
 	}
 }
 
 func upload(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("method:", r.Method)
 
-	var img Img
-	img.Title = "上传文件"
-	// token
-	crutime := time.Now().Unix()
-	token := md5sum(strconv.FormatInt(crutime, 10))
-	fmt.Printf("token:\t%v\n", token)
-	img.Token = token
+	var Info Infos
+	Info.Title = "上传文件"
+	Info.Token = createToken()
 
 	if r.Method == "GET" {
 		t, err := template.ParseFiles(templatePath + "upload.gtpl")
 		simple_util.CheckErr(err)
-		t.Execute(w, img)
+		t.Execute(w, Info)
 	} else {
 		r.ParseMultipartForm(32 << 20)
 		file, handler, err := r.FormFile("uploadfile")
@@ -372,5 +374,37 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		simple_util.CheckErr(err)
 		defer f.Close()
 		io.Copy(f, file)
+	}
+}
+
+func updateMO(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+
+	var Info Infos
+	Info.Title = "更新MO"
+	Info.Token = createToken()
+
+	if r.Method == "GET" {
+		t, err := template.ParseFiles(templatePath+"header.gtpl", templatePath+"updateMO.gtpl")
+		simple_util.CheckErr(err)
+		t.ExecuteTemplate(w, "updateMO", Info)
+	} else {
+		r.ParseMultipartForm(32 << 20)
+		file, handler, err := r.FormFile("uploadfile")
+		simple_util.CheckErr(err)
+		defer file.Close()
+		fmt.Fprintf(w, "%v", handler.Header)
+		f, err := os.Create("public" + pSep + handler.Filename)
+		simple_util.CheckErr(err)
+		defer f.Close()
+		_, err = io.Copy(f, file)
+		simple_util.CheckErr(err)
+		_, mapArray := simple_util.Sheet2MapArray("public"+pSep+handler.Filename, "Sheet1")
+		var db = map[string][]map[string]string{
+			"data": mapArray,
+		}
+		jsonByte, err := json.MarshalIndent(db, "", "\t")
+		simple_util.CheckErr(err)
+		simple_util.Json2file(jsonByte, "public"+pSep+handler.Filename+".Sheet1.json")
 	}
 }

@@ -1,9 +1,8 @@
 {{define "plotReadsLocal"}}
-{{template "header"}}
+{{template "header" .}}
 <main>
-    <div class="jumbotron"></div>
     <form enctype="multipart/form-data" action="/plotReadsLocal" method="post" target="_blank">
-        <input type="text" name="token" id="token" value="{{.Token}}"></input>
+        <input type="hidden" name="token" id="token" value="{{.Token}}"></input>
         <div class="form-group row">
             <label for="bamPath" class="col-sm-2 col-form-label">Prefix</label>
             <div class="col-sm-10">
