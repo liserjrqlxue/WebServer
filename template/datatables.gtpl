@@ -40,8 +40,7 @@
     $(document).ready(function() {
         // DataTable
         var table = $('#example').DataTable({
-            //"ajax":"/ajax/data/arrays.txt"
-            "ajax":"/public/生育研发MO.xlsx.Sheet1.json",
+            "ajax":"/public/MO.json",
             "columns":[
                 {"data":"工单对应的研发项目编码（必填）"},
                 {"data":"工单对应的研发项目名称（必填）"},

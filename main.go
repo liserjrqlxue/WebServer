@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/liserjrqlxue/RDMO/router"
 	"log"
 	"net/http"
 	"strings"
@@ -26,7 +27,7 @@ func main() {
 	http.HandleFunc("/datatables", datatables)
 	http.HandleFunc("/plotReadsLocal", plotReadsLocal)
 	http.HandleFunc("/upload", upload)
-	http.HandleFunc("/updateMO", updateMO)
+	http.HandleFunc("/updateMO", router.UpdateMO)
 
 	StaticDir["/static"] = "static"
 	StaticDir["/public"] = "public"

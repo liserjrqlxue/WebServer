@@ -16,16 +16,17 @@
                    onclick="$('#i-file').click();">
                     Browse
                 </a>
+                <button type="submit" class="btn btn-primary">upload</button>
             </div>
-            <button type="submit" class="btn btn-primary btn-block">upload</button>
         </form>
     </div>
-
 </main>
 <script src="/static/js/jquery-3.3.1.js"></script>
-<footer class="container">
-<p>&copy; BGI 2019</p>
-</footer>
-</body>
-</html>
+<script>
+    if({{.Message}}!=""){
+        console.log({{.Message}})
+        alert({{.Message}})
+    }
+</script>
+{{template "footer" .}}
 {{end}}
