@@ -33,4 +33,5 @@
         </form>
     </div>
 </nav>
+<div class="jumbotron">{{.Title}}</div>
 {{end}}
