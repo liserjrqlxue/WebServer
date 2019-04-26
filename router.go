@@ -250,16 +250,16 @@ func sayhelloName(w http.ResponseWriter, r *http.Request) {
 }
 
 func logRequest(r *http.Request) {
-	fmt.Println(r.Form) //这些信息是输出到服务器端的打印信息
-	fmt.Println("path", r.URL.Path)
-	fmt.Println("scheme", r.URL.Scheme)
-	fmt.Println(r.Form["url_long"])
+	log.Println(r.Form) //这些信息是输出到服务器端的打印信息
+	log.Println("path", r.URL.Path)
+	log.Println("scheme", r.URL.Scheme)
+	log.Println(r.Form["url_long"])
 	for k, v := range r.Form {
-		fmt.Printf("key:%s\t", k)
+		log.Printf("key:%s\t", k)
 		if len(v) < 1024 {
-			fmt.Printf("key:[%s]\tval:[%v]\n", k, v)
+			log.Printf("key:[%s]\tval:[%v]\n", k, v)
 		} else {
-			fmt.Printf("key:[%s]\tval: large data!\n", k)
+			log.Printf("key:[%s]\tval: large data!\n", k)
 		}
 	}
 }
@@ -309,7 +309,7 @@ func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 		pngName := pngPrefix + pngSuffix
 		Info.Src = tag + "/" + pngName
 		Info.Img = pngName
-		fmt.Println(
+		log.Println(
 			"/share/backup/wangyaoshen/perl5/perlbrew/perls/perl-5.26.2/bin/perl",
 			plotScript,
 			"-Rs", "/ifs9/BC_B2C_01A/B2C_SGD/SOFTWARES/bin/Rscript",
