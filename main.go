@@ -26,6 +26,7 @@ func main() {
 	http.HandleFunc("/autoReport", autoReport)
 	http.HandleFunc("/datatables", router.LoadMO)
 	http.HandleFunc("/plotReadsLocal", plotReadsLocal)
+	http.HandleFunc("/plotMultiReadsLocal", plotMultiReadsLocal)
 	http.HandleFunc("/upload", upload)
 	http.HandleFunc("/updateMO", router.UpdateMO)
 
