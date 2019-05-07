@@ -3,6 +3,7 @@ package main
 import (
 	"archive/zip"
 	"crypto/md5"
+	"encoding/json"
 	"fmt"
 	"github.com/liserjrqlxue/simple-util"
 	"html/template"
@@ -280,6 +281,8 @@ func login(w http.ResponseWriter, r *http.Request) {
 var plotReadsLocalDir = "public" + pSep + "plotReadsLocal"
 var plotScript = "src" + pSep + "plotreads.sz.pl"
 
+var perl = "/share/backup/wangyaoshen/perl5/perlbrew/perls/perl-5.26.2/bin/perl"
+
 func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html", templatePath+"plotReadsLocal.html")
 	simple_util.CheckErr(err)
@@ -309,32 +312,97 @@ func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 		pngName := pngPrefix + pngSuffix
 		Info.Src = tag + "/" + pngName
 		Info.Img = pngName
-		log.Println(
-			"/share/backup/wangyaoshen/perl5/perlbrew/perls/perl-5.26.2/bin/perl",
+		var cmd = []string{
 			plotScript,
 			"-Rs", "/ifs9/BC_B2C_01A/B2C_SGD/SOFTWARES/bin/Rscript",
 			"-b", r.Form["path"][0],
 			"-c", r.Form["chr"][0],
 			"-p", r.Form["Start"][0], "-r",
-			"-prefix", plotReadsLocalDir+pSep+tag+pSep+pngPrefix,
+			"-prefix", plotReadsLocalDir + pSep + tag + pSep + pngPrefix,
 			"-f", "20", "-d", "-a", "-l", r.Form["Plotread_Length"][0],
-		)
-		simple_util.RunCmd(
-			"/share/backup/wangyaoshen/perl5/perlbrew/perls/perl-5.26.2/bin/perl",
-			"src/plotreads.sz.pl",
-			"-Rs", "/ifs9/BC_B2C_01A/B2C_SGD/SOFTWARES/bin/Rscript",
-			"-b", r.Form["path"][0],
-			"-c", r.Form["chr"][0],
-			"-p", r.Form["Start"][0], "-r",
-			"-prefix", plotReadsLocalDir+pSep+tag+pSep+pngPrefix,
-			"-f", "20", "-d", "-a", "-l", r.Form["Plotread_Length"][0],
-		)
+		}
+		log.Println(perl, cmd)
+		simple_util.RunCmd(perl, cmd...)
 	} else {
 		r.ParseForm()
 		logRequest(r)
 	}
 	t.ExecuteTemplate(w, "plotReadsLocal", Info)
 }
+
+type PlotInfo struct {
+	SampleID string   `json:"sample_name"`
+	Bam      string   `json:"bam_path"`
+	Variants []string `json:"variants"`
+}
+
+func plotMultiReadsLocal(w http.ResponseWriter, r *http.Request) {
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html", templatePath+"plotMultiReadsLocal.html")
+	simple_util.CheckErr(err)
+
+	var Info Infos
+	Info.Title = "本地集群画reads图"
+	Info.Token = createToken()
+
+	log.Println("method:", r.Method)
+	if r.Method == "POST" {
+		y, m, _ := time.Now().Date()
+		tag := fmt.Sprintf("%d-%v", y, m)
+		var plotInfo PlotInfo
+		decoder := json.NewDecoder(r.Body)
+		decoder.Decode(&plotInfo)
+		sampleID := plotInfo.SampleID
+		bam := plotInfo.Bam
+		variants := plotInfo.Variants
+		pngPrefix := sampleID + "_" + Info.Token
+		var varUrl []string
+		for _, variant := range variants {
+			item := strings.Split(variant, "-")
+			if len(item) < 3 {
+				varUrl = append(varUrl, "error!")
+				fmt.Fprintf(w, "<h1>ERROR:<h1>\n<p>variant:%s can not parser!</p>\n", variant)
+			} else {
+				chr := item[0]
+				start := item[1]
+				stop := item[2]
+				position := start
+				if len(item) >= 5 {
+					ref := item[3]
+					alt := item[4]
+					p1, err1 := strconv.Atoi(start)
+					p2, err2 := strconv.Atoi(stop)
+					if err1 == nil && err2 == nil {
+						if p2-p1 == 1 && len(ref) == 1 && len(alt) == 1 {
+						} else if ref == "." || len(alt) > 1 {
+							position = start + "in" + stop
+						} else {
+							position = start + "to" + stop
+						}
+					}
+				}
+				pngSuffix := "_" + chr + "_" + position + ".png"
+				varUrl = append(varUrl, pngPrefix+pngSuffix)
+				var cmd = []string{
+					plotScript,
+					"-Rs", "/ifs9/BC_B2C_01A/B2C_SGD/SOFTWARES/bin/Rscript",
+					"-b", bam,
+					"-c", chr,
+					"-p", position, "-r",
+					"-prefix", plotReadsLocalDir + pSep + tag + pSep + pngPrefix,
+					"-f", "20", "-d", "-a", "-l", "100",
+				}
+				log.Println(perl, cmd)
+				simple_util.RunCmd(perl, cmd...)
+				fmt.Fprintf(w, "<p>%s</p>\n<img src=\"%s\">%s</img>\n", pngPrefix+pngSuffix, tag+"/"+pngPrefix+pngSuffix, tag+"/"+pngPrefix+pngSuffix)
+			}
+		}
+	} else {
+		r.ParseForm()
+		logRequest(r)
+		t.ExecuteTemplate(w, "plotMultiReadsLocal", Info)
+	}
+}
+
 func upload(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("method:", r.Method)
 
