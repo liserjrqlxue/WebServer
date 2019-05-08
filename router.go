@@ -472,7 +472,6 @@ func plotExonCnv(w http.ResponseWriter, r *http.Request) {
 		r.ParseMultipartForm(32 << 20)
 		logRequest(r)
 
-		workspace := "/ifs9/B2C_SGD/PROJECT/MGISEQ-2000_Project/exome_diagnose/exome_cnv/"
 		workdir := "public/exome_cnv/" + Info.Token
 		os.MkdirAll(workdir, 0755)
 
@@ -482,12 +481,14 @@ func plotExonCnv(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(infoF, info)
 		fmt.Print(info)
 		simple_util.CheckErr(infoF.Close())
-		simple_util.RunCmd(workspace+"/start.sh", workdir+"/info")
+		simple_util.RunCmd(perl, "src/gen_script_exon_CNV.pl", workdir+"/info", exPath+"/"+workdir)
 
 		Info.Href = "/public/exome_cnv/" + Info.Token
 		Info.Message = "Download"
+		http.Redirect(w, r, "/"+workdir, http.StatusSeeOther)
+	} else {
+		t, err := template.ParseFiles(templatePath + "plotExonCnv.html")
+		simple_util.CheckErr(err)
+		t.Execute(w, Info)
 	}
-	t, err := template.ParseFiles(templatePath + "plotExonCnv.html")
-	simple_util.CheckErr(err)
-	t.Execute(w, Info)
 }
