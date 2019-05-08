@@ -472,20 +472,26 @@ func plotExonCnv(w http.ResponseWriter, r *http.Request) {
 		r.ParseMultipartForm(32 << 20)
 		logRequest(r)
 
-		workdir := "public/exome_cnv/" + Info.Token
+		y, m, _ := time.Now().Date()
+		tag := fmt.Sprintf("%d-%v", y, m)
+
+		workdir := filepath.Join("public", "exome_cnv", tag, Info.Token)
 		os.MkdirAll(workdir, 0755)
 
 		info := r.FormValue("info")
-		infoF, err := os.Create(workdir + "/info")
+		infoPath := filepath.Join(workdir, "info")
+		infoF, err := os.Create(infoPath)
 		simple_util.CheckErr(err)
 		fmt.Fprint(infoF, info)
 		fmt.Print(info)
 		simple_util.CheckErr(infoF.Close())
-		simple_util.RunCmd(perl, "src/gen_script_exon_CNV.pl", workdir+"/info", exPath+"/"+workdir)
-
-		Info.Href = "/public/exome_cnv/" + Info.Token
-		Info.Message = "Download"
-		http.Redirect(w, r, "/"+workdir, http.StatusSeeOther)
+		err = simple_util.RunCmd(perl, filepath.Join("src", "gen_script_exon_CNV.pl"), infoPath, filepath.Join(exPath, workdir))
+		if err != nil {
+			fmt.Fprintf(w, "Error:\n\t%+v\n", err)
+			log.Println(err)
+		} else {
+			http.Redirect(w, r, strings.Join([]string{"public", "exome_cnv", tag, Info.Token}, "/"), http.StatusSeeOther)
+		}
 	} else {
 		t, err := template.ParseFiles(templatePath + "plotExonCnv.html")
 		simple_util.CheckErr(err)
