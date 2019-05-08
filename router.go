@@ -473,7 +473,7 @@ func plotExonCnv(w http.ResponseWriter, r *http.Request) {
 		logRequest(r)
 
 		workspace := "/ifs9/B2C_SGD/PROJECT/MGISEQ-2000_Project/exome_diagnose/exome_cnv/"
-		workdir := workspace + Info.Token
+		workdir := "public/exome_cnv/" + Info.Token
 		os.MkdirAll(workdir, 0755)
 
 		info := r.FormValue("info")
