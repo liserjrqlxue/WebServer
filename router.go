@@ -460,3 +460,34 @@ func fixHemi(w http.ResponseWriter, r *http.Request) {
 	simple_util.CheckErr(err)
 	t.Execute(w, Info)
 }
+
+func plotExonCnv(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+
+	var Info Infos
+	Info.Title = "exon cnv plot"
+	Info.Token = createToken()
+
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+
+		workspace := "/ifs9/B2C_SGD/PROJECT/MGISEQ-2000_Project/exome_diagnose/exome_cnv/"
+		workdir := workspace + Info.Token
+		os.MkdirAll(workdir, 0755)
+
+		info := r.FormValue("info")
+		infoF, err := os.Create(workdir + "/info")
+		simple_util.CheckErr(err)
+		fmt.Fprint(infoF, info)
+		fmt.Print(info)
+		simple_util.CheckErr(infoF.Close())
+		simple_util.RunCmd(workspace+"/start.sh", workdir+"/info")
+
+		Info.Href = "/public/exome_cnv/" + Info.Token
+		Info.Message = "Download"
+	}
+	t, err := template.ParseFiles(templatePath + "plotExonCnv.html")
+	simple_util.CheckErr(err)
+	t.Execute(w, Info)
+}
