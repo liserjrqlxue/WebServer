@@ -426,3 +426,37 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		io.Copy(f, file)
 	}
 }
+
+func fixHemi(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+
+	var Info Infos
+	Info.Title = "Hemi修復"
+	Info.Token = createToken()
+
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		file, handler, err := r.FormFile("uploadfile")
+		r.FormValue("gender")
+		simple_util.CheckErr(err)
+		defer file.Close()
+		//fmt.Fprintf(w, "%v", handler.Header)
+		f, err := os.Create("public" + pSep + handler.Filename)
+		simple_util.CheckErr(err)
+		defer f.Close()
+		io.Copy(f, file)
+		cmd := []string{
+			"-input", "public" + pSep + handler.Filename,
+			"-gender", r.FormValue("gender"),
+			"-output", "public" + pSep + handler.Filename + "." + r.FormValue("gender") + ".xlsx",
+		}
+		simple_util.RunCmd(
+			exPath+pSep+"hemiFix.exe", cmd...,
+		)
+		Info.Href = "/public/" + handler.Filename + "." + r.FormValue("gender") + ".xlsx"
+		Info.Message = "Download"
+	}
+	t, err := template.ParseFiles(templatePath + "fixHemi.html")
+	simple_util.CheckErr(err)
+	t.Execute(w, Info)
+}

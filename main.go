@@ -28,6 +28,7 @@ func main() {
 	http.HandleFunc("/plotReadsLocal", plotReadsLocal)
 	http.HandleFunc("/plotMultiReadsLocal", plotMultiReadsLocal)
 	http.HandleFunc("/upload", upload)
+	http.HandleFunc("/fixHemi", fixHemi)
 	http.HandleFunc("/updateMO", router.UpdateMO)
 
 	StaticDir["/static"] = "static"
