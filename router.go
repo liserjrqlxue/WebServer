@@ -437,7 +437,6 @@ func fixHemi(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		r.ParseMultipartForm(32 << 20)
 		file, handler, err := r.FormFile("uploadfile")
-		r.FormValue("gender")
 		simple_util.CheckErr(err)
 		defer file.Close()
 		//fmt.Fprintf(w, "%v", handler.Header)
@@ -457,6 +456,41 @@ func fixHemi(w http.ResponseWriter, r *http.Request) {
 		Info.Message = "Download"
 	}
 	t, err := template.ParseFiles(templatePath + "fixHemi.html")
+	simple_util.CheckErr(err)
+	t.Execute(w, Info)
+}
+
+func filterExcel(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+
+	var Info Infos
+	Info.Title = "filter Excel"
+	Info.Token = createToken()
+
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		file, handler, err := r.FormFile("uploadfile")
+		simple_util.CheckErr(err)
+		defer file.Close()
+		//fmt.Fprintf(w, "%v", handler.Header)
+		f, err := os.Create("public" + pSep + handler.Filename)
+		simple_util.CheckErr(err)
+		defer f.Close()
+		io.Copy(f, file)
+		cmd := []string{
+			"-input", "public" + pSep + handler.Filename,
+			"-gene", "gene.list",
+			"-output", "public" + pSep + handler.Filename + ".filter.xlsx",
+		}
+		log.Println(
+			simple_util.RunCmd(
+				exPath+pSep+"filterExcel", cmd...,
+			),
+		)
+		Info.Href = "/public/" + handler.Filename + ".filter.xlsx"
+		Info.Message = "Download"
+	}
+	t, err := template.ParseFiles(templatePath + "filterExcel.html")
 	simple_util.CheckErr(err)
 	t.Execute(w, Info)
 }
