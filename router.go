@@ -462,6 +462,8 @@ func fixHemi(w http.ResponseWriter, r *http.Request) {
 
 func filterExcel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath + "filterExcel.html")
+	simple_util.CheckErr(err)
 
 	var Info Infos
 	Info.Title = "filter Excel"
@@ -470,7 +472,12 @@ func filterExcel(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		r.ParseMultipartForm(32 << 20)
 		file, handler, err := r.FormFile("uploadfile")
-		simple_util.CheckErr(err)
+		if err != nil {
+			log.Println(err)
+			Info.Err = err.Error()
+			t.Execute(w, Info)
+			return
+		}
 		defer file.Close()
 		//fmt.Fprintf(w, "%v", handler.Header)
 		f, err := os.Create("public" + pSep + handler.Filename)
@@ -490,8 +497,6 @@ func filterExcel(w http.ResponseWriter, r *http.Request) {
 		Info.Href = "/public/" + handler.Filename + ".filter.xlsx"
 		Info.Message = "Download"
 	}
-	t, err := template.ParseFiles(templatePath + "filterExcel.html")
-	simple_util.CheckErr(err)
 	t.Execute(w, Info)
 }
 
