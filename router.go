@@ -526,6 +526,7 @@ func plotExonCnv(w http.ResponseWriter, r *http.Request) {
 		simple_util.CheckErr(infoF.Close())
 		err = simple_util.RunCmd(perl, filepath.Join("src", "gen_script_exon_CNV.pl"), infoPath, filepath.Join(exPath, workdir))
 		if err != nil {
+			fmt.Fprintln(w, "CMD:", perl, filepath.Join("src", "gen_script_exon_CNV.pl"), infoPath, filepath.Join(exPath, workdir))
 			fmt.Fprintf(w, "Error:\n\t%+v\n", err)
 			log.Println(err)
 		} else {
