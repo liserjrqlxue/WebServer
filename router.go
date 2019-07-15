@@ -563,7 +563,7 @@ func WESanno(w http.ResponseWriter, r *http.Request) {
 		simple_util.CheckErr(err)
 		fmt.Print(info)
 		simple_util.CheckErr(infoF.Close())
-		log.Printf("RunCmd:[%s] [%s] [%s] [%s]", "bash", filepath.Join("src", "wes_anno.sh"), infoPath)
+		log.Printf("RunCmd:[%s] [%s] [%s]", "bash", filepath.Join("src", "wes_anno.sh"), infoPath)
 		err = simple_util.RunCmd("bash", filepath.Join("src", "wes_anno.sh"), infoPath)
 		if err != nil {
 			log.Println(err)
