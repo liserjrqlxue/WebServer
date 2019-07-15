@@ -556,6 +556,7 @@ func WESanno(w http.ResponseWriter, r *http.Request) {
 		simple_util.CheckErr(os.MkdirAll(workdir, 0755))
 
 		info := r.FormValue("info")
+		sampleID := r.FormValue("sampleID")
 		infoPath := filepath.Join(workdir, "HGMD")
 		infoF, err := os.Create(infoPath)
 		simple_util.CheckErr(err)
@@ -563,8 +564,8 @@ func WESanno(w http.ResponseWriter, r *http.Request) {
 		simple_util.CheckErr(err)
 		fmt.Print(info)
 		simple_util.CheckErr(infoF.Close())
-		log.Printf("RunCmd:[%s] [%s] [%s]", "bash", filepath.Join("src", "wes_anno.sh"), infoPath)
-		err = simple_util.RunCmd("bash", filepath.Join("src", "wes_anno.sh"), infoPath)
+		log.Printf("RunCmd:[%s] [%s] [%s] [%s]", "bash", filepath.Join("src", "wes_anno.sh"), infoPath, sampleID)
+		err = simple_util.RunCmd("bash", filepath.Join("src", "wes_anno.sh"), infoPath, sampleID)
 		if err != nil {
 			log.Println(err)
 			_, err = fmt.Fprintf(w, "Error:\n\t%+v\n", err)
