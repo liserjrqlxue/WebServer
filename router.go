@@ -28,6 +28,10 @@ var (
 	templatePath = exPath + pSep + "template" + pSep
 )
 
+var (
+	sep = regexp.MustCompile(`\s+`)
+)
+
 type Infos struct {
 	Option  string
 	Img     string
@@ -568,9 +572,9 @@ func WESanno(w http.ResponseWriter, r *http.Request) {
 		log.Printf("RunCmd:[%s] [%s] [%s] [%s]", "bash", filepath.Join("src", "wes_anno.sh"), infoPath, sampleID)
 		err = simple_util.RunCmd("bash", filepath.Join("src", "wes_anno.sh"), infoPath, sampleID)
 		if err != nil {
+			fmt.Fprintln(w, "CMD:", "bash", filepath.Join("src", "wes_anno.sh"), infoPath, sampleID)
+			fmt.Fprintf(w, "Error:\n\t%+v\n", err)
 			log.Println(err)
-			_, err = fmt.Fprintf(w, "Error:\n\t%+v\n", err)
-			simple_util.CheckErr(err)
 		} else {
 			http.Redirect(w, r, filepath.Join("public", "wes_anno", tag, Info.Token), http.StatusSeeOther)
 		}
@@ -578,5 +582,46 @@ func WESanno(w http.ResponseWriter, r *http.Request) {
 		t, err := template.ParseFiles(templatePath + "WESanno.html")
 		simple_util.CheckErr(err)
 		simple_util.CheckErr(t.Execute(w, Info))
+	}
+}
+
+func plotCNVkit(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+
+	var Info Infos
+	Info.Title = "plot CNVkit"
+	Info.Token = createToken()
+
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+
+		script := filepath.Join("src", "run_CNVkit_plot.sh")
+
+		y, m, _ := time.Now().Date()
+		tag := fmt.Sprintf("%d-%v", y, m)
+
+		workdir := filepath.Join("public", "CNVkit", tag, Info.Token)
+		os.MkdirAll(workdir, 0755)
+
+		workDir := r.FormValue("workdir")
+		sampleID := r.FormValue("sampleID")
+		region := r.FormValue("region")
+		regions := sep.Split(region, -1)
+		var args = append([]string{script, sampleID, workDir, workdir}, regions...)
+
+		err := simple_util.RunCmd("bash", args...)
+		if err != nil {
+			fmt.Fprintln(w, "CMD:", "bash", args)
+			fmt.Fprintf(w, "Error:\n\t%+v\n", err)
+			log.Println(err)
+		} else {
+			//http.Redirect(w, r, strings.Join([]string{"public", "CNVkit", tag, Info.Token}, "/"), http.StatusSeeOther)
+			http.Redirect(w, r, workdir, http.StatusSeeOther)
+		}
+	} else {
+		t, err := template.ParseFiles(templatePath + "plotExonCnv.html")
+		simple_util.CheckErr(err)
+		t.Execute(w, Info)
 	}
 }

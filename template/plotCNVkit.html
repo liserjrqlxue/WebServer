@@ -1,0 +1,17 @@
+<html>
+<head>
+    <title>{{.Title}}</title>
+</head>
+<body>
+<form enctype="multipart/form-data" action="/plotCNVkit" method="post">
+    <input type="text" id="sampleID" name="sampleID" placeholder="sampleID"/>
+    <br>
+    <input type="text" id="workdir" name="workdir" placeholder="workdir(ie:/ifs9/B2C_SGD/PROJECT/MGISEQ-2000_Project/exome_diagnose/20190717_BGISEQ-50017SZ0001577_1578_8)"/>
+    <br>
+    <input type="text" id="region" name="region" placeholder="chr start end"/>
+    <br>
+    <input type="submit" value="upload"></input>
+</form>
+<a href="{{.Href}}">{{.Message}}</a>
+</body>
+</html>
