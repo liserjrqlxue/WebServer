@@ -543,6 +543,48 @@ func plotExonCnv(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func genCNVkit(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+
+	var Info Infos
+	Info.Title = "CNVkit plot"
+	Info.Token = createToken()
+
+	script := filepath.Join("src", "gen_CNVkit_pic.pl")
+
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+
+		y, m, _ := time.Now().Date()
+		tag := fmt.Sprintf("%d-%v", y, m)
+
+		workdir := filepath.Join("public", "geneCNVkit", tag, Info.Token)
+		os.MkdirAll(workdir, 0755)
+
+		info := r.FormValue("info")
+		infoPath := filepath.Join(workdir, "info")
+		infoF, err := os.Create(infoPath)
+		simple_util.CheckErr(err)
+		fmt.Fprint(infoF, info)
+		fmt.Print(info)
+		simple_util.CheckErr(infoF.Close())
+		err = simple_util.RunCmd(perl, script, infoPath, filepath.Join(exPath, workdir))
+		if err != nil {
+			fmt.Fprintln(w, "CMD:", perl, script, infoPath, filepath.Join(exPath, workdir))
+			fmt.Fprintf(w, "Error:\n\t%+v\n", err)
+			log.Println(err)
+		} else {
+			//http.Redirect(w, r, strings.Join([]string{"public", "genCNVkit", tag, Info.Token}, "/"), http.StatusSeeOther)
+			http.Redirect(w, r, workdir, http.StatusSeeOther)
+		}
+	} else {
+		t, err := template.ParseFiles(templatePath + "plotExonCnv.html")
+		simple_util.CheckErr(err)
+		t.Execute(w, Info)
+	}
+}
+
 func WESanno(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("method:", r.Method)
 
