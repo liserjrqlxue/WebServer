@@ -579,7 +579,7 @@ func genCNVkit(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, workdir, http.StatusSeeOther)
 		}
 	} else {
-		t, err := template.ParseFiles(templatePath + "plotExonCnv.html")
+		t, err := template.ParseFiles(templatePath + "genCNVkit.html")
 		simple_util.CheckErr(err)
 		t.Execute(w, Info)
 	}
