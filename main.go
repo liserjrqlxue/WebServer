@@ -33,6 +33,7 @@ func main() {
 	http.HandleFunc("/plotExonCnv", plotExonCnv)
 	http.HandleFunc("/updateMO", router.UpdateMO)
 	http.HandleFunc("/WESanno", WESanno)
+	http.HandleFunc("/plotCNVkit", plotCNVkit)
 
 	StaticDir["/static"] = "static"
 	StaticDir["/public"] = "public"
