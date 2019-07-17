@@ -32,6 +32,7 @@ func main() {
 	http.HandleFunc("/filterExcel", filterExcel)
 	http.HandleFunc("/plotExonCnv", plotExonCnv)
 	http.HandleFunc("/updateMO", router.UpdateMO)
+	http.HandleFunc("/WESanno", WESanno)
 
 	StaticDir["/static"] = "static"
 	StaticDir["/public"] = "public"

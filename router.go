@@ -538,3 +538,45 @@ func plotExonCnv(w http.ResponseWriter, r *http.Request) {
 		t.Execute(w, Info)
 	}
 }
+
+func WESanno(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+
+	var Info Infos
+	Info.Title = "WES annotation"
+	Info.Token = createToken()
+
+	if r.Method == "POST" {
+		simple_util.CheckErr(r.ParseMultipartForm(32 << 20))
+		logRequest(r)
+
+		y, m, _ := time.Now().Date()
+		tag := fmt.Sprintf("%d-%v", y, m)
+
+		workdir := filepath.Join("public", "wes_anno", tag, Info.Token)
+		simple_util.CheckErr(os.MkdirAll(workdir, 0755))
+
+		info := r.FormValue("info")
+		sampleID := r.FormValue("sampleID")
+		infoPath := filepath.Join(workdir, "HGMD")
+		infoF, err := os.Create(infoPath)
+		simple_util.CheckErr(err)
+		_, err = fmt.Fprint(infoF, info)
+		simple_util.CheckErr(err)
+		fmt.Print(info)
+		simple_util.CheckErr(infoF.Close())
+		log.Printf("RunCmd:[%s] [%s] [%s] [%s]", "bash", filepath.Join("src", "wes_anno.sh"), infoPath, sampleID)
+		err = simple_util.RunCmd("bash", filepath.Join("src", "wes_anno.sh"), infoPath, sampleID)
+		if err != nil {
+			log.Println(err)
+			_, err = fmt.Fprintf(w, "Error:\n\t%+v\n", err)
+			simple_util.CheckErr(err)
+		} else {
+			http.Redirect(w, r, filepath.Join("public", "wes_anno", tag, Info.Token), http.StatusSeeOther)
+		}
+	} else {
+		t, err := template.ParseFiles(templatePath + "WESanno.html")
+		simple_util.CheckErr(err)
+		simple_util.CheckErr(t.Execute(w, Info))
+	}
+}
