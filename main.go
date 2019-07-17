@@ -31,6 +31,7 @@ func main() {
 	http.HandleFunc("/fixHemi", fixHemi)
 	http.HandleFunc("/filterExcel", filterExcel)
 	http.HandleFunc("/plotExonCnv", plotExonCnv)
+	http.HandleFunc("/genCNVkit", genCNVkit)
 	http.HandleFunc("/updateMO", router.UpdateMO)
 	http.HandleFunc("/WESanno", WESanno)
 	http.HandleFunc("/plotCNVkit", plotCNVkit)
