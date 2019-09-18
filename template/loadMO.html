@@ -11,29 +11,36 @@
     <div class="container">
         <div class="form-inline">
             <label for="searchNo">项目编号</label>
-            <input type="text" id="searchNo" name="searchNo" class="form-control col-sm-6" placeholder="Search 项目编号" aria-label="Search"></input>
+            <input type="text" id="searchNo" name="searchNo" class="form-control col-sm-6" placeholder="Search 项目编号"
+                   aria-label="Search"/>
         </div>
         <div class="form-inline">
             <label for="searchName">项目名称</label>
-            <input type="text" id="searchName" name="searchName" class="form-control col-sm-6" placeholder="Search 项目名称" aria-label="Search"></input>
+            <input type="text" id="searchName" name="searchName" class="form-control col-sm-6" placeholder="Search 项目名称"
+                   aria-label="Search"/>
         </div>
     </div>
     <table id="example" class="display" style="width:100%">
         <thead>
         <tr>
-            <th>工单对应的研发项目编码（必填）</th>
-            <th>工单对应的研发项目名称（必填）</th>
+            <th>项目编号</th>
+            <th>项目名称</th>
             <th>项目负责人</th>
-            <th>天津华大医学检验所有限公司
-                A230(已上线领料系统)</th>
-            <th>武汉华大医学检验所有限公司
-                A080(已上线领料系统)</th>
-            <th>深圳华大基因科技服务有限公司
-                A040(已上线领料系统)</th>
-            <th>深圳华大基因科技服务有限公司天津分公司
-                A520(已上线领料系统</th>
-            <th>深圳华大基因股份有限公司
-                A000(未上线领料系统)</th>
+            <th>"天津华大医学检验所有限公司
+                A230(WMS领料)"
+            </th>
+            <th>"深圳华大临床检验中心
+                A020(WMS领料)"
+            </th>
+            <th>"深圳华大基因股份有限公司
+                A000(WMS领料)"
+            </th>
+            <th>"武汉华大医学检验所有限公司
+                A080(WMS领料)"
+            </th>
+            <th>"武汉生物科技
+                A100(线下领料)"
+            </th>
         </tr>
         </thead>
     </table>
@@ -49,19 +56,18 @@
         var table = $('#example').DataTable({
             "ajax":"/public/MO.json",
             "columns":[
-                {"data":"工单对应的研发项目编码（必填）"},
-                {"data":"工单对应的研发项目名称（必填）"},
+                {"data":"项目编号"},
+                {"data":"项目名称"},
                 {"data":"项目负责人"},
-                {"data":"天津华大医学检验所有限公司\nA230(已上线领料系统)"},
-                {"data":"武汉华大医学检验所有限公司\nA080(已上线领料系统)"},
-                {"data":"深圳华大基因科技服务有限公司\nA040(已上线领料系统)"},
-                {"data":"深圳华大基因科技服务有限公司天津分公司\nA520(已上线领料系统)"},
-                {"data":"深圳华大基因股份有限公司\nA000(未上线领料系统)"},
+                {"data":"天津华大医学检验所有限公司\nA230(WMS领料)"},
+                {"data":"深圳华大临床检验中心\nA020(WMS领料)"},
+                {"data":"深圳华大基因股份有限公司\nA000(WMS领料)"},
+                {"data":"武汉华大医学检验所有限公司\nA080(WMS领料)"},
+                {"data":"武汉生物科技\nA100(线下领料)"},
             ]
         });
 
-        table.columns(0).search("MO").draw()
-
+        table.columns(0).search("MO").draw();
         $('#searchNo').on('keyup click',function() {
            table.columns(0).search("^"+$('#searchNo').val().trim()+"$",true).draw()
         });
