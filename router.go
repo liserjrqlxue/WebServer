@@ -285,7 +285,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 var plotReadsLocalDir = "public" + pSep + "plotReadsLocal"
 var plotScript = "src" + pSep + "plotreads.sz.pl"
 
-var perl = "/share/backup/wangyaoshen/perl5/perlbrew/perls/perl-5.26.2/bin/perl"
+var perl = "/home/liuqiang1/USR/soft/bin/perl"
 
 func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html", templatePath+"plotReadsLocal.html")
@@ -407,6 +407,60 @@ func plotMultiReadsLocal(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+var slotReadsLocalDir = "public" + pSep + "sPlotReadsLocal"
+var splotScript = "src" + pSep + "sample.plotreads.sz.pl"
+
+func SamplePlotReadsLocal(w http.ResponseWriter, r *http.Request) {
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html", templatePath+"SampleplotReadsLocal.html")
+	simple_util.CheckErr(err)
+
+	var Info Infos
+	Info.Title = "本地集群画reads图"
+	Info.Token = createToken()
+
+	log.Println("method:", r.Method)
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+
+		prefix := r.FormValue("prefix")
+
+		if r.Form["position"][0] != "at" && len(r.Form["End"]) > 0 {
+			r.Form["Start"][0] = r.Form["Start"][0] + r.Form["position"][0] + r.Form["End"][0]
+		}
+
+		y, m, _ := time.Now().Date()
+		tag := fmt.Sprintf("%d-%v", y, m)
+		err := os.MkdirAll(slotReadsLocalDir+pSep+tag, 0755)
+		simple_util.CheckErr(err)
+
+		pngPrefix := prefix + "_" + Info.Token
+		pngSuffix := "_" + r.Form["chr"][0] + "_" + r.Form["Start"][0] + ".png"
+		pngName := pngPrefix + pngSuffix
+		Info.Src = tag + "/" + pngName
+		Info.Img = pngName
+		var cmd = []string{
+			splotScript,
+			"-Rs", "/ifs9/BC_B2C_01A/B2C_SGD/SOFTWARES/bin/Rscript",
+			"-b", r.Form["path"][0],
+			"-c", r.Form["chr"][0],
+			"-p", r.Form["Start"][0], "-r",
+			"-prefix", slotReadsLocalDir + pSep + tag + pSep + pngPrefix,
+			"-f", "20", "-d", "-a", "-l", r.Form["Plotread_Length"][0],
+		}
+		log.Println(perl, cmd)
+		simple_util.RunCmd(perl, cmd...)
+	} else {
+		r.ParseForm()
+		logRequest(r)
+	}
+	t.ExecuteTemplate(w, "SamplePlotReadsLocal", Info)  //Execute: ues this func's name, 
+	//also html's first line  {{define "SamplePlotReadsLocal"}} should use this function's name to link the web 
+	//also html's second line  action="/SamplePlotReadsLocal" should use this function's name to control the html page it going to visit after click submit
+	// html's img  dir should be the same with slotReadsLocalDir to get result : <img src="/public/sPlotReadsLocal/{{.Src}}"/>
+}
+
+
 func upload(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("method:", r.Method)
 
@@ -484,21 +538,18 @@ func filterExcel(w http.ResponseWriter, r *http.Request) {
 		}
 		defer file.Close()
 		//fmt.Fprintf(w, "%v", handler.Header)
-		f, err := os.Create("public" + pSep + handler.Filename)
+		f, err := os.Create("public" + pSep + "filter" + pSep + handler.Filename)
 		simple_util.CheckErr(err)
 		defer f.Close()
 		io.Copy(f, file)
 		cmd := []string{
-			"-input", "public" + pSep + handler.Filename,
-			"-gene", "gene.list",
-			"-output", "public" + pSep + handler.Filename + ".filter.xlsx",
+			filepath.Join(exPath,"src","genefilter.pl"),
+			"-i", "public" + pSep + "filter" + pSep + handler.Filename,
+			"-g", r.FormValue("gene"),
+			"-o", "public" + pSep + "filter" + pSep + handler.Filename + ".filter.xlsx",
 		}
-		log.Println(
-			simple_util.RunCmd(
-				exPath+pSep+"filterExcel", cmd...,
-			),
-		)
-		Info.Href = "/public/" + handler.Filename + ".filter.xlsx"
+		simple_util.RunCmd(perl, cmd...)
+		Info.Href = "/public/filter/" + handler.Filename + ".filter.xlsx"
 		Info.Message = "Download"
 	}
 	t.Execute(w, Info)
@@ -512,7 +563,7 @@ func plotExonCnv(w http.ResponseWriter, r *http.Request) {
 	Info.Token = createToken()
 
 	if r.Method == "POST" {
-		r.ParseMultipartForm(32 << 20)
+		r.ParseMultipartForm(32 << 20) //分配获取信息内存
 		logRequest(r)
 
 		y, m, _ := time.Now().Date()
@@ -571,9 +622,10 @@ func genCNVkit(w http.ResponseWriter, r *http.Request) {
 		simple_util.CheckErr(infoF.Close())
 		err = simple_util.RunCmd(perl, script, infoPath, filepath.Join(exPath, workdir))
 		if err != nil {
-			fmt.Fprintln(w, "CMD:", perl, script, infoPath, filepath.Join(exPath, workdir))
-			fmt.Fprintf(w, "Error:\n\t%+v\n", err)
-			log.Println(err)
+			//fmt.Fprintln(w, "CMD:", perl, script, infoPath, filepath.Join(exPath, workdir))
+			//fmt.Fprintf(w, "Error:\n\t%+v\n", err)
+			//log.Println(err)
+			http.Redirect(w, r, strings.Join([]string{"public", "exome_cnv", tag, Info.Token}, "/"), http.StatusSeeOther)
 		} else {
 			//http.Redirect(w, r, strings.Join([]string{"public", "genCNVkit", tag, Info.Token}, "/"), http.StatusSeeOther)
 			http.Redirect(w, r, workdir, http.StatusSeeOther)
@@ -626,6 +678,37 @@ func WESanno(w http.ResponseWriter, r *http.Request) {
 		simple_util.CheckErr(t.Execute(w, Info))
 	}
 }
+func phoenix(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	var Info Infos
+	Info.Title = "phoenix"
+	Info.Token = createToken()
+	if r.Method == "POST" {
+		//simple_util.CheckErr(r.ParseMultipartForm(32 << 20))
+		logRequest(r)
+		workdir := filepath.Join("public", "phoenix")
+		//simple_util.CheckErr(os.MkdirAll(workdir, 0755))
+		info := r.FormValue("info")
+		chip := r.FormValue("chip")
+		infoPath := filepath.Join(workdir, chip)
+		infoF, err := os.Create(infoPath)
+		simple_util.CheckErr(err)
+		_, err = fmt.Fprint(infoF, info)
+		simple_util.CheckErr(err)
+		fmt.Print(info)
+		simple_util.CheckErr(infoF.Close())
+		//err = simple_util.RunCmd("python3", filepath.Join("src", "sycamore.py"))
+		//if err != nil {
+		//	log.Println(err)
+		//} else {
+		//	http.Redirect(w, r, filepath.Join("public", "phoenix"), http.StatusSeeOther)
+		//}
+	} else {
+		t, err := template.ParseFiles(templatePath + "phoenix.html")
+		simple_util.CheckErr(err)
+		simple_util.CheckErr(t.Execute(w, Info))
+	}
+}
 
 func plotCNVkit(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("method:", r.Method)
@@ -666,4 +749,188 @@ func plotCNVkit(w http.ResponseWriter, r *http.Request) {
 		simple_util.CheckErr(err)
 		t.Execute(w, Info)
 	}
+}
+
+func findfile(w http.ResponseWriter, r *http.Request) {
+        fmt.Println("method:", r.Method)
+	var Info Infos
+	Info.Title = "Findfile"
+	Info.Token = createToken()
+	script := filepath.Join("src", "findfile.pl")
+	if r.Method == "POST" {
+	        r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		y, m, _ := time.Now().Date()
+		tag := fmt.Sprintf("%d-%v", y, m)
+		workdir := filepath.Join("public", "findfile", tag, Info.Token)
+		os.MkdirAll(workdir, 0755)
+		info := r.FormValue("info")
+		infoPath := filepath.Join(workdir, "info")
+		qc := r.Form["QC"][0]
+		filetype := strings.Join(r.Form["filetype"],",")
+		infoF, err := os.Create(infoPath)
+		simple_util.CheckErr(err)
+		fmt.Fprint(infoF, info)
+		fmt.Print(info,"\n")
+		simple_util.CheckErr(infoF.Close())
+		var cmd = []string{
+		        script,
+			"-list", infoPath,
+			"-target", filepath.Join(exPath, workdir),
+			"-QC", qc,
+			"-filetype", filetype,
+		}
+		err = simple_util.RunCmd(perl, cmd...)
+		if err != nil {
+		        fmt.Fprintln(w, "CMD:", perl, script, infoPath, filepath.Join(exPath, workdir))
+			fmt.Fprintf(w, "Error:\n\t%+v\n", err)
+			log.Println(err)
+		} else {
+		        //http.Redirect(w, r, strings.Join([]string{"public", "findfile", tag, Info.Token}, "/"), http.StatusSeeOther)
+			http.Redirect(w, r, workdir, http.StatusSeeOther)
+			//http.Redirect(w, r, strings.Join([]string{"public", "wait.html"}, "/"), http.StatusSeeOther)
+		}
+	} else {
+	        t, err := template.ParseFiles(templatePath + "findfile.html")
+		simple_util.CheckErr(err)
+		t.Execute(w, Info)
+	}
+}
+
+func unsend(w http.ResponseWriter, r *http.Request) {
+        script := filepath.Join("src", "unsend.pl")
+        workdir := filepath.Join("public", "unsend")
+        simple_util.RunCmd(perl, script)
+        http.Redirect(w, r, workdir, http.StatusSeeOther)
+}
+
+
+
+
+func Manual_Trio(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+
+	var Info Infos
+	Info.Title = "Manual_Trio"
+	Info.Token = createToken()
+
+	if r.Method == "POST" {
+		simple_util.CheckErr(r.ParseMultipartForm(32 << 20))
+		logRequest(r)
+
+		y, m, _ := time.Now().Date()
+		tag := fmt.Sprintf("%d-%v", y, m)
+
+		workdir := filepath.Join("public", "Manual_Trio", tag, Info.Token)
+		simple_util.CheckErr(os.MkdirAll(workdir, 0755))
+
+		
+		sampleID := r.FormValue("sampleID")
+		info := r.FormValue("info")
+		Q20 := r.FormValue("Q20")
+		Q30 := r.FormValue("Q30")
+		DEPTH := r.FormValue("DEPTH")
+		COV20 := r.FormValue("COV20")
+		QC := Q20 + "," + Q30 + "," + DEPTH + "," + COV20
+		sample_Path := filepath.Join(workdir, "sampleID")
+		infoF, err := os.Create(sample_Path)
+		simple_util.CheckErr(err)
+		_, err = fmt.Fprint(infoF, sampleID)  //往sample_Path里面写sampleID
+		simple_util.CheckErr(err)
+		fmt.Print(info)
+		simple_util.CheckErr(infoF.Close())
+		log.Printf("RunCmd:[%s] [%s] [%s] [%s] [%s]", perl, filepath.Join("src", "trio_family_manual_xgentic.pl"),sample_Path, filepath.Join(exPath, workdir),QC,info )
+		err = simple_util.RunCmd(perl, filepath.Join("src", "trio_family_manual_xgentic.pl"), sample_Path, filepath.Join(exPath, workdir),QC,info )
+		if err != nil {
+			fmt.Fprintln(w, "CMD:", perl, filepath.Join("src", "trio_family_manual_xgentic.pl"), sample_Path,  filepath.Join(exPath, workdir),QC, info )
+			fmt.Fprintf(w, "Error:\n\t%+v\n", err)
+			log.Println(err)
+		} else {
+			http.Redirect(w, r, filepath.Join("public", "Manual_Trio", tag, Info.Token), http.StatusSeeOther)  //"public", "Manual_Trio"都是指向工作目录的
+		}
+	} else {
+		t, err := template.ParseFiles(templatePath + "Manual_Trio.html")
+		simple_util.CheckErr(err)
+		simple_util.CheckErr(t.Execute(w, Info))
+	}
+}
+
+
+func deafInfo(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	var info Infos
+	info.Token = createToken()
+	info.Title = "深圳耳聋样本信息录入"
+	t, err := template.ParseFiles(templatePath+"deafInfo.html")
+	simple_util.CheckErr(err)
+
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		info.Option = r.FormValue("type")
+		info.Token = r.FormValue("token")
+
+		file, handler, err := r.FormFile("uploadfile")
+		simple_util.CheckErr(err)
+
+		defer simple_util.DeferClose(file)
+		info.Token = r.FormValue("token")
+		
+		inputDir := path.Join("public", info.Option, "input")
+		err = os.MkdirAll(inputDir, 0755)
+		simple_util.CheckErr(err)
+
+		uploadFileName := handler.Filename
+		suffix := filepath.Ext(uploadFileName)
+		filename := strings.TrimRight(uploadFileName, suffix)
+		newName := md5sum(filename)
+		saveFileName := path.Join(inputDir, newName+suffix)
+		if _, err := os.Stat(saveFileName); err == nil {
+			log.Println(saveFileName + "已存在")
+			return
+		}
+		f, err := os.OpenFile(saveFileName, os.O_WRONLY|os.O_CREATE, 0666)
+		simple_util.CheckErr(err)
+		io.Copy(f, file)
+	} else {
+			//r.ParseForm()
+			//logRequest(r)
+			simple_util.CheckErr(t.Execute(w, info))
+
+	}
+	
+}
+
+func kinship(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	var Info Infos
+	Info.Title = "Kinship"
+	Info.Token = createToken()
+	t, err := template.ParseFiles(templatePath + "kinship.html")
+	simple_util.CheckErr(err)
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		workdir := filepath.Join("public", "kinship", Info.Token)
+		os.MkdirAll(workdir, 0755)
+		info := r.FormValue("info")
+		infoPath := filepath.Join(workdir, "info")
+		infoF, err := os.Create(infoPath)
+		simple_util.CheckErr(err)
+		fmt.Fprint(infoF, info)
+		fmt.Print(info,"\n")
+		simple_util.CheckErr(infoF.Close())
+		script := filepath.Join("src", "kinship.py")
+		var cmd = []string{
+			script, infoPath, filepath.Join(exPath, workdir),}
+		err = simple_util.RunCmd("python", cmd...)
+		if err != nil {
+			log.Println(err)
+		} else {
+			http.Redirect(w, r, filepath.Join(workdir,  "kinship"), http.StatusSeeOther)
+		}
+	} else {
+		t.Execute(w, Info)
+	}
+	t.ExecuteTemplate(w, "kinship", Info)
 }

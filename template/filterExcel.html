@@ -7,6 +7,9 @@
     <input type="file" name="uploadfile"></input>
     <input type="hidden" name="token" value="{{.Token}}"></input>
     <br>
+	<div>Tier1过滤基因(多个基因使用逗号分割):</div>
+	<textarea class="row col-sm-12" rows="1" cols="50" id="gene" name="gene"></textarea>
+	<br>
     <input type="submit" value="upload"></input>
 </form>
 <a href="{{.Href}}">{{.Message}}</a>

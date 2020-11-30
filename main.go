@@ -22,6 +22,7 @@ var StaticDir = make(map[string]string)
 func main() {
 	flag.Parse()
 	// 设置访问的路由
+	//http.HandleFunc("/Web_url_name", func_name)
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/autoReport", autoReport)
 	http.HandleFunc("/datatables", router.LoadMO)
@@ -35,6 +36,15 @@ func main() {
 	http.HandleFunc("/updateMO", router.UpdateMO)
 	http.HandleFunc("/WESanno", WESanno)
 	http.HandleFunc("/plotCNVkit", plotCNVkit)
+	http.HandleFunc("/findfile",findfile)
+	http.HandleFunc("/SamplePlotReadsLocal",SamplePlotReadsLocal)
+	http.HandleFunc("/unsend",unsend)
+	http.HandleFunc("/Manual_Trio",Manual_Trio)
+	//http.HandleFunc("/Scan_Week_Upload",Scan_Week_Upload)
+	http.HandleFunc("/deafInfo",deafInfo)
+	http.HandleFunc("/phoenix",phoenix)
+	http.HandleFunc("/kinship",kinship)
+
 
 	StaticDir["/static"] = "static"
 	StaticDir["/public"] = "public"

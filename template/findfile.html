@@ -1,0 +1,37 @@
+<html>
+<script type="text/javascript">
+    function getUrlParam(name){
+        var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+        var r = window.location.search.substr(1).match(reg);  
+        if (r != null) return unescape(r[2]); return null; 
+    }
+    $('textarea[name="info"]').val(getUrlParam("info"));
+    $('select[name="QC"]').val(getUrlParam("QC"));
+    $('input[name="filetype"]').val(getUrlParam("filetype"));
+</script>
+<body>
+	<form enctype="multipart/form-data" action="/findfile" method="post">
+		<div class="col-sm-4">
+			<input type="hidden" name="token" id="token" value="{{.Token}}"></input>
+			<label for="bamPath" class="col-sm-2 col-form-label">样本编号(多个样本以以换行符分隔，请勿带空格，自动转化B/D/L等字符 例如用19B1234567 也可以找到19D1234567)<br></label>
+			<textarea class="row col-sm-12" rows="5" cols="100" id="info" name="info" placeholder="sampleID"></textarea>
+		</div>
+		<div class="col-sm-4">
+			<label for="bamPath" class="col-sm-2 col-form-label">QC过滤严谨度<br>strict: 全外样本 严格根据Q30不低于85,平均深度不低于100x,20x覆盖度不低于95%筛选合格样本，适用于全外新版样本. 其余panel样本根据30不低于85,平均深度不低于100x 的条件筛选合格样本<br>loose: 全外样本根据 Q30不低于80,平均深度不低于79x的旧版质控筛选, 其余panel样本 根据Q30不低于80，平均深度不低于99x 的让步接收条件 筛选合格样本<br></label>
+			<select class="form-control" id="QC" name="QC" required="required">
+				<option value="strict">strict</option>
+				<option value="loose">loose</option>
+			</select>
+		</div>
+		<div class="col-sm-4">
+		<label for="bamPath" class="col-sm-2 col-form-label">需要的文件类型<br></label>
+			<label><input name="filetype" type="checkbox" value="vcf" />vcf<br></label> 
+			<label><input name="filetype" type="checkbox" value="Tier1" />Tier1<br></label>
+			<label><input name="filetype" type="checkbox" value="excel" />excel(包括tier123旧版bed.gz，单病的excel表等 所有excel结果)<br></label>
+			<label><input name="filetype" type="checkbox" value="picture" />Reads Picture(仅单病有)<br></label>
+		</div>
+		<button type="submit" class="btn btn-primary btn-block">Submit</button>
+	</form> 
+</body>
+
+</html>

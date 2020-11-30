@@ -1,0 +1,15 @@
+<html>
+<head>
+    <title>{{.Title}}</title>
+</head>
+<body>
+<form enctype="multipart/form-data" action="/kinship" method="post">
+	<div> 亲缘关系分析</div><br>
+	<div> 每行一个样本编号，按先证者，父，母，顺序排列</div><br>
+    <textarea class="row col-sm-12" rows="3" cols="50" id="info" name="info" placeholder="sampleID"></textarea>
+    <br>
+    <input type="submit" value="upload"></input>
+</form>
+<a href="{{.Href}}">{{.Message}}</a>
+</body>
+</html>

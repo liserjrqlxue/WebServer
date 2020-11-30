@@ -4,30 +4,60 @@
     <!-- Main jumbotron for a primary marketing message or call to action -->
     <div class="jumbotron">
         <div class="container">
-            <h1 class="display-3">Hello, world!</h1>
-            <p>This is a template for a simple marketing or informational website. It includes a large callout called a jumbotron and three supporting pieces of content. Use it as a starting point to create something more unique.</p>
-            <p><a class="btn btn-primary btn-lg" href="#" role="button">Learn more &raquo;</a></p>
+            <h1 class="display-3">信息分析及解读工具合集</h1>
+            <p>网页包括reads图、CNV图、外显子图、家系合并、样本分析结果导出等功能，具体使用方法请进入工具界面，有疑问请联系叶浩东(yehaodong@genomics.cn)。</p>
+            <p><a class="btn btn-primary btn-lg" href="#" role="button">More &raquo;</a></p>
         </div>
     </div>
 
     <div class="container">
         <!-- Example row of columns -->
-        <div class="row">
-            <div class="col-md-4">
-                <h2>孕前报告自动化</h2>
-                <p>孕前报告自动化</p>
-                <p><a class="btn btn-secondary" href="autoReport?type=pre_pregnancy" role="button">View details &raquo;</a></p>
+        <div class="row" style="margin-bottom: 10;">
+            <div class="col-md-4" style="margin:10">	
+                <h2>本地画reads图</h2>
+                <p>需要bam文件路径，在Tier1表 quality Sheet中</p>
+                <p><a class="btn btn-secondary" href="plotReadsLocal" role="button">点击进入页面 &raquo;</a></p>
             </div>
-            <div class="col-md-4">
-                <h2>WGS报告自动化</h2>
-                <p>孕前报告自动化</p>
-                <p><a class="btn btn-secondary" href="autoReport?type=wgs" role="button">View details &raquo;</a></p>
+            <div class="col-md-4" style="margin:10">
+                <h2>画largeCNV图</h2>
+                <p>需要样本编号及对应坐标</p>
+                <p><a class="btn btn-secondary" href="genCNVkit" role="button">点击进入页面 &raquo;</a></p>
             </div>
-            <div class="col-md-4">
-                <h2>海外报告自动化</h2>
-                <p>孕前报告自动化</p>
-                <p><a class="btn btn-secondary" href="autoReport?type=hw" role="button">View details &raquo;</a></p>
+            <div class="col-md-4" >
+                <h2>全外位点注释</h2>
+                <p>需要位点的ref和alt，ref必须与hg19参考基因集一致</p>
+                <p><a class="btn btn-secondary" href="WESanno" role="button">点击进入页面 &raquo;</a></p>
             </div>
+			<div class="col-md-4" >
+				<h2>线下家系合并（2.0解读系统格式）</h2>
+				<p>trio经典家系，couple夫妻双人家系，single单样本Tier表，allgene非OMIM基因Tier表</p>
+				<p><a class="btn btn-secondary" href="Manual_Trio" role="button">点击进入页面 &raquo;</a></p>
+			</div>
+			<div class="col-md-4" >
+				<h2>Tier1表指定基因集过滤工具</h2>
+				<p>在Tier1表的基础上过滤指定基因的工具，适用于KY1003，虚拟panel等样本</p>
+				<p><a class="btn btn-secondary" href="filterExcel" role="button">点击进入页面 &raquo;</a></p>
+			</div>
+			<div class="col-md-4" >
+				<h2>亲缘关系分析工具</h2>
+				<p>使用样本编号自动分析亲缘关系</p>
+				<p><a class="btn btn-secondary" href="kinship" role="button">点击进入页面 &raquo;</a></p>
+			</div>
+			<div class="col-md-4" >
+				<h2>画外显子柱状图</h2>
+				<p>画指定样本指定基因的外显子柱状图，包括基因中各外显子的覆盖度和深度</p>
+				<p><a class="btn btn-secondary" href="plotExonCnv" role="button">点击进入页面 &raquo;</a></p>
+			</div>
+			<div class="col-md-4" >
+				<h2>耳聋实验信息样本录入</h2>
+				<p>耳聋实验信息样本录入</p>
+				<p><a class="btn btn-secondary" href="deafInfo" role="button">点击进入页面 &raquo;</a></p>
+			</div>
+			<div class="col-md-4" >
+				<h2>样本分析结果导出</h2>
+				<p>自动导出结果合格的信息分析结果</p>
+				<p><a class="btn btn-secondary" href="findfile" role="button">点击进入页面 &raquo;</a></p>
+			</div>
         </div>
         <hr/>
     </div> <!-- /container -->
