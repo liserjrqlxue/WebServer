@@ -15,7 +15,7 @@ sub phoenix_qc {
     my $sample_name="$part1\.$part2";
 	my @grep_result;
     @grep_result = `less /ifs7/B2C_USER/yehaodong/phoenix |awk '{if(\$1~"$sample_name"){print \$0}}'`;    #<-------------database
-    foreach my $grep_result(reverse(@grep_result)){
+	foreach my $grep_result(reverse(@grep_result)){
     	chomp $grep_result;
 		my $sample_name2=(split /\t/,$grep_result)[0];
     	my $outpath=(split /\t/,$grep_result)[10];
@@ -36,7 +36,7 @@ sub phoenix_qc {
     	}
 		if ($qctag eq "Y" and (split /\t/,$grep_result)[4] eq "Y"){
 			print "$outpath/work/$sample_name2\t$outpath/result/$sample_name2\n";  #20190905
-		}elsif($qctag eq "L" and $q20 >= "90%" and $q30>="85%" and $depth >= 100 and $cov20>="95%"){
+		}elsif($qctag eq "L" and $q20 >= "90%" and $q30>="80%" and $depth >= 100 and $cov20 >= "90%"){
 			print "$outpath/work/$sample_name2\t$outpath/result/$sample_name2\n";
 		}elsif($qctag eq "N"){
 			print "$outpath/work/$sample_name2\t$outpath/result/$sample_name2\n";
@@ -49,7 +49,7 @@ sub exome_diagnose_qc{
 	my $part1 = substr($sample_name, 0,2); my $part2=substr($sample_name, 3);
 	my $sample_name="$part1\.$part2";
 	my @grep_result;
-	@grep_result = `less /ifs9/B2C_SGD/PROJECT/monitor/sampleInfoData/sample_list |awk '{if(\$1~"$sample_name"){print \$0}}'`;
+	@grep_result = `less /ifs9/B2C_SGD/PROJECT/monitor/sampleInfoData/sample_list|awk '{if(\$1~"$sample_name"){print \$0}}'`;
 	foreach my $grep_result(reverse(@grep_result)){
 		chomp $grep_result;
 		my $sample_name2=(split /\t/,$grep_result)[0];

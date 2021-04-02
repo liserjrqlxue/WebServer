@@ -147,12 +147,13 @@ my $depth = 0;
 my %header_reset = ();
 
 $prefix .= $pic;
-my $optsamview = ($filter) ? '-q 1' : ''; # using filter options in samtools view to filter reads directly.
-$optsamview .= (($readgroup eq "") ? (( $RGlist eq "" ) ? "" : " -R $RGlist" ) : " -r $readgroup");
-$optsamview .= " -F 256";
+my $optsamview = ($filter>20) ? '-q 1 ' : ''; # using filter options in samtools view to filter reads directly.
+$optsamview .= (($readgroup eq "") ? (( $RGlist eq "" ) ? "" : "-R $RGlist " ) : "-r $readgroup ");
+$optsamview .= "-F 256";
 my $alter_bai = $bam;
 $alter_bai =~ s/\.bam$/.bai/;
 if ((  -f $bam.".bai" and -r $bam.".bai" ) or ( -f $alter_bai and -r $alter_bai )) {
+	print "$samtools view $optsamview $bam $chr:$pos1-$pos2 |\n";
     open BAM, "$samtools view $optsamview $bam $chr:$pos1-$pos2 |" or die;
 }
 else {
@@ -175,7 +176,7 @@ BAM: while (<BAM>) {
 	    $unipair_opt = 0;
 	}
     }
-    next BAM if $filter and $mq < $filter;
+    #next BAM if $filter and $mq < $filter;
     #$uniopt = 0 if ($mq == 0 and $unipair_opt == 0);
     #next BAM if ($repeat and $uniopt == 0);
 

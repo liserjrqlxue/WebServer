@@ -554,6 +554,115 @@ func filterExcel(w http.ResponseWriter, r *http.Request) {
 	}
 	t.Execute(w, Info)
 }
+func filterKDNY(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath + "filterExcel.html")
+	simple_util.CheckErr(err)
+
+	var Info Infos
+	Info.Title = "filter KDNY"
+	Info.Token = createToken()
+
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		workdir := filepath.Join("public", "filter", Info.Token)
+		os.MkdirAll(workdir, 0755)
+		sample_list := sep.Split(r.FormValue("sample"),-1)
+		for i := range sample_list {
+			cmd := []string{
+				"src/allgene.filter.sh",
+				sample_list[i],
+				"KDNY",
+				workdir,
+			}
+			fmt.Println(cmd)
+			simple_util.RunCmd("bash",cmd...)
+		}
+		Info.Href = "/public/filter/" + Info.Token
+		Info.Message = "Open Dir"
+	}
+	t.Execute(w, Info)
+}
+func filterInfertility(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath + "filterExcel.html")
+	simple_util.CheckErr(err)
+
+	var Info Infos
+	Info.Title = "filter Infertility"
+	Info.Token = createToken()
+
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		workdir := filepath.Join("public", "filter", Info.Token)
+		os.MkdirAll(workdir, 0755)
+		sample_list := sep.Split(r.FormValue("sample"),-1)
+		for i := range sample_list {
+			cmd := []string{
+				"src/allgene.filter.sh",
+				sample_list[i],
+				"Infertility",
+				workdir,
+			}
+			fmt.Println(cmd)
+			simple_util.RunCmd("bash",cmd...)
+		}
+		Info.Href = "/public/filter/" + Info.Token
+		Info.Message = "Open Dir"
+	}
+	t.Execute(w, Info)
+}
+func BamExtractor(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath + "filterExcel.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "Bam Extractor"
+	Info.Token = createToken()
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		workdir := filepath.Join("public", "filter", Info.Token)
+		os.MkdirAll(workdir, 0755)
+		cmd := []string{
+			"src/Bam_Extractor.sh",
+			r.FormValue("sample"),
+			r.FormValue("position"),
+			workdir,
+		}
+		fmt.Println(cmd)
+		simple_util.RunCmd("bash",cmd...)
+		Info.Href = "/public/filter/" + Info.Token
+		Info.Message = "Open Dir"
+	}
+	t.Execute(w, Info)
+}
+func ExomeDepthplot(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath + "filterExcel.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "ExomeDepth plot"
+	Info.Token = createToken()
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		cmd := []string{
+			"src/ExomeDepth_plot.sh",
+			r.FormValue("sample"),
+			r.FormValue("gene"),
+			r.Form["chr"][0],
+			Info.Token,
+		}
+		fmt.Println(cmd)
+		simple_util.RunCmd("bash",cmd...)
+		Info.Href = "/public/ExomeDepth/" + Info.Token +".pdf"
+		Info.Message = "Open plot"
+	}
+	t.Execute(w, Info)
+}
 
 func plotExonCnv(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("method:", r.Method)
@@ -753,48 +862,49 @@ func plotCNVkit(w http.ResponseWriter, r *http.Request) {
 
 func findfile(w http.ResponseWriter, r *http.Request) {
         fmt.Println("method:", r.Method)
-	var Info Infos
-	Info.Title = "Findfile"
-	Info.Token = createToken()
-	script := filepath.Join("src", "findfile.pl")
-	if r.Method == "POST" {
-	        r.ParseMultipartForm(32 << 20)
-		logRequest(r)
-		y, m, _ := time.Now().Date()
-		tag := fmt.Sprintf("%d-%v", y, m)
-		workdir := filepath.Join("public", "findfile", tag, Info.Token)
-		os.MkdirAll(workdir, 0755)
-		info := r.FormValue("info")
-		infoPath := filepath.Join(workdir, "info")
-		qc := r.Form["QC"][0]
-		filetype := strings.Join(r.Form["filetype"],",")
-		infoF, err := os.Create(infoPath)
-		simple_util.CheckErr(err)
-		fmt.Fprint(infoF, info)
-		fmt.Print(info,"\n")
-		simple_util.CheckErr(infoF.Close())
-		var cmd = []string{
-		        script,
-			"-list", infoPath,
-			"-target", filepath.Join(exPath, workdir),
-			"-QC", qc,
-			"-filetype", filetype,
+
+        var Info Infos
+        Info.Title = "Findfile"
+        Info.Token = createToken()
+        t, err := template.ParseFiles(templatePath + "findfile.html")
+        simple_util.CheckErr(err)
+        script := filepath.Join("src", "findfile.pl")
+        if r.Method == "POST" {
+                r.ParseMultipartForm(32 << 20)
+                                logRequest(r)
+                y, m, _ := time.Now().Date()
+                tag := fmt.Sprintf("%d-%v", y, m)
+                workdir := filepath.Join("public", "findfile", tag, Info.Token)
+                os.MkdirAll(workdir, 0755)
+                info := r.FormValue("info")
+                                infoPath := filepath.Join(workdir, "info")
+                                qc := r.Form["QC"][0]
+                                filetype := strings.Join(r.Form["filetype"],",")
+                                infoF, err := os.Create(infoPath)
+                simple_util.CheckErr(err)
+                fmt.Fprint(infoF, info)
+                fmt.Print(info,"\n")
+                simple_util.CheckErr(infoF.Close())
+                var cmd = []string{
+                        script,
+                        "-list", infoPath,
+                        "-target", filepath.Join(exPath, workdir),
+                        "-QC", qc,
+                        "-filetype", filetype,
+                }
+                                err = simple_util.RunCmd(perl, cmd...)
+                if err != nil {
+                        fmt.Fprintln(w, "CMD:", perl, script, infoPath, filepath.Join(exPath, workdir))
+                        fmt.Fprintf(w, "Error:\n\t%+v\n", err)
+                        log.Println(err)
+                } else {
+                        //http.Redirect(w, r, strings.Join([]string{"public", "findfile", tag, Info.Token}, "/"), http.StatusSeeOther)
+                        http.Redirect(w, r, workdir, http.StatusSeeOther)
+                }
+        } else {
+			t.Execute(w, Info)
 		}
-		err = simple_util.RunCmd(perl, cmd...)
-		if err != nil {
-		        fmt.Fprintln(w, "CMD:", perl, script, infoPath, filepath.Join(exPath, workdir))
-			fmt.Fprintf(w, "Error:\n\t%+v\n", err)
-			log.Println(err)
-		} else {
-		        //http.Redirect(w, r, strings.Join([]string{"public", "findfile", tag, Info.Token}, "/"), http.StatusSeeOther)
-			http.Redirect(w, r, workdir, http.StatusSeeOther)
-			//http.Redirect(w, r, strings.Join([]string{"public", "wait.html"}, "/"), http.StatusSeeOther)
-		}
-	} else {
-	        t, err := template.ParseFiles(templatePath + "findfile.html")
-		simple_util.CheckErr(err)
-		t.Execute(w, Info)
-	}
+		t.ExecuteTemplate(w, "filein", Info)
 }
 
 func unsend(w http.ResponseWriter, r *http.Request) {

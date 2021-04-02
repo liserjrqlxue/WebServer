@@ -10,7 +10,7 @@ my $sample=basename(dirname(dirname($dir)));
 my @gene=split /\,/,$ge;
 my $nm;
 #open BB,">$sample\_exon_avedep.info";
-my %hhh;my %hash;my %cov;
+my %hhh;my %hash;my %cov;my %cov20;my %genelen;
 foreach my $gene(@gene){
 #    $hash{$gene}{"1"}=0;
 #    $cov{$gene}{"1"}=0;
@@ -29,6 +29,8 @@ foreach my $gene(@gene){
             my $gene_nm="$line[8].$line[0]";  #20180417
 	    $hash{$gene_nm}{"1"}=0;  #20180418
 	    $cov{$gene_nm}{"1"}=0;   #20180418
+		$cov20{$gene_nm}{"1"}=0;
+		$genelen{$gene_nm}{"1"}=0;
             for(my $i=1;$i<=$#sa;$i++){ #每一行遍历
                 my @sc=split /\t/,$sa[$i]; #sc 是每一行拆分的 sa是每一行
                 if ($sa[$i]=~/5-UTR/i && $sa[$i+1]=~/intron/){ #这一行是UTR 下一行是intron
@@ -93,28 +95,34 @@ foreach my $gg(keys %hhh){  #gene
     foreach my $ee(sort{$a<=>$b} keys %{$hhh{$gg}}){  #exome
         print "exome is $ee\n";
         my $diff=${$hhh{$gg}{$ee}}[2]-${$hhh{$gg}{$ee}}[1]-299;  #算出范围
-        my ($cnt,$all)=(0,0);       
+        my ($cnt,$all,$cov20)=(0,0,0);       
         for my $chr(keys %depth){
             for my $pos(keys %{$depth{$chr}}){
                 if (${$hhh{$gg}{$ee}}[0] eq "$chr" && $pos>=${$hhh{$gg}{$ee}}[1]+150 && $pos<=${$hhh{$gg}{$ee}}[2]-150){
 #                   print "$chr\t$chr\t${$hhh{$gg}{$ee}}[0]\t${$hhh{$gg}{$ee}}[2]\n";
                     $all+=$depth{$chr}{$pos};   #范围内总深度
                     $cnt++;  #cnt是落在范围内的碱基计数
+					if($depth{$chr}{$pos} >= 20){$cov20++}  #20X碱基计数
                 }
             }
         }
         my $ave=sprintf "%.2f",$all/$diff;   #平均深度
         my $cco=sprintf "%.2f",$cnt/$diff;   #1x覆盖度
+		my $ccov20=sprintf "%.2f",$cov20/$diff; #20x覆盖度
         $cco=$cco*100;
+		$ccov20=$ccov20*100;
         $hash{$gg}{$ee}=$ave;
         $cov{$gg}{$ee}=$cco;
+		$cov20{$gg}{$ee}=$ccov20;
+		$genelen{$gg}{$ee}=$diff;
 #       print "$cnt\t$diff\n";
     }
 }
 open BB,">$sample.$nm\_exon_avedep.info";
+print BB "#geneSymbol.transcript\tExon\tMean_depth\tMedian_depth\tcoverage\t20X_coverage\n";
 foreach my $ggg(keys %hash){
     foreach my $eee(sort{$a<=>$b} keys %{$hash{$ggg}}){
-        print BB "$ggg\tEX$eee\t$hash{$ggg}{$eee}\t$hash{$ggg}{$eee}\t$cov{$ggg}{$eee}\n";
+        print BB "$ggg\tEX$eee\t$hash{$ggg}{$eee}\t$hash{$ggg}{$eee}\t$cov{$ggg}{$eee}\t$cov20{$ggg}{$eee}\n";
     }
 }
 close BB;

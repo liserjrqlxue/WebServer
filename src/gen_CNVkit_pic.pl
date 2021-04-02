@@ -38,8 +38,8 @@ my %hash = (
 );
 my $num=int(rand(3)+1);
 print "$num\n";
-print STDERR "qsub -cwd -l vf=2G,p=1 -P B2C_SGD -wd $workdir $workdir/script\n";
-print STDERR `qsub -cwd -l vf=2G,p=1 -P B2C_SGD -wd $workdir $workdir/script`;
+print STDERR "qsub -cwd -l vf=2G,p=1 -P B2C_SGD -q bc_b2c.q -wd $workdir $workdir/script\n";
+print STDERR `qsub -cwd -l vf=2G,p=1 -P B2C_SGD -q bc_b2c.q -wd $workdir $workdir/script`;
 
 my $time_string=`date '+%Y-%m-%d %H:%M:%S'`; chomp $time_string; my $line= "$time_string $0"; 
 `echo $line >> /ifs9/B2C_SGD/PROJECT/MGISEQ-2000_Project/exome_diagnose/exome_cnv/WebServer/run.log`
