@@ -7,7 +7,7 @@ export LD_LIBRARY_PATH=$GCC/lib64:$GCC/lib:$LOCAL/lib64:$LOCAL/lib:$LD_LIBRARY_P
 Bin=/ifs9/B2C_COM_P2/pub/sgd/Pipeline/analysis_pipeline/ExomeDepth
 
 sample=$1
-path=$(perl /ifs9/B2C_SGD/PROJECT/MGISEQ-2000_Project/exome_diagnose/exome_cnv/WebServer/src/samplepath.pl $sample|head -1|cut -f 1)
+path=$(perl /ifs9/B2C_SGD/PROJECT/MGISEQ-2000_Project/exome_diagnose/exome_cnv/WebServer/src/samplepath.pl $sample L|head -1|cut -f 1)
 gene=$2
 if [ $3 == "X" ]
 then
