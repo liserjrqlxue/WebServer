@@ -1,0 +1,29 @@
+{{define "login"}}
+{{template "header" .}}
+<head>
+    <title>用户登录</title>
+    <meta charset="utf-8">
+</head>
+<body>
+<h3 style="text-align: center">用户登录</h3>
+<form action="/login" method="post" >
+    <table border="1" cellpadding="10" style="margin: 0px auto">
+        <tr>
+            <td align="center">用户名</td>
+            <td><input type="text" name="username"/></td>
+        </tr>
+        <tr>
+            <td align="center">密&nbsp;码</td>
+            <td><input type="password" name="password"/></td>
+        </tr>
+        <tr align="center">
+            <td colspan="2">
+                <input type="submit" value="登录"/>
+                <input type="reset" value="修改密码"/>
+            </td>
+        </tr>
+    </table>
+</form>
+</body>
+{{template "footer" .}}
+{{end}}

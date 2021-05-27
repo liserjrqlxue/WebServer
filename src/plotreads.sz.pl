@@ -18,7 +18,7 @@ my (
   )
   = (
     0, 0, 0, 0, 0, 0, 0, 100, 0, 0, "/ifs9/BC_B2C_01A/B2C_SGD/quning/bin/samtools-0.1.19/samtools",
-    "/ifs7/B2C_SGD/PROJECT/PP12_Project/analysis_pipeline/BGICG_Annotation_update/db/aln_db/hg19/hg19_chM.fa.rz",
+    "/ifs9/B2C_COM_P2/pub/sgd/Pipeline/analysis_pipeline/src/db/hg19/hg19_chM.fa.rz",
     "Rscript", "./", 0, "", "", 0,""
   );
 my $result = GetOptions(

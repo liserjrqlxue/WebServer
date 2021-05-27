@@ -97,8 +97,9 @@ while (<IN1>) { #each sample
 			if ($opts{filetype}=~/bam/){
 				my @outpath=split(/\t/,$grep_result[0]);chomp $outpath[0];
 				open BAM, ">>$opts{target}/bampath.txt";
-				my @bam=glob "$outpath[0]/bwa/*.final.bam";
+				my @bam=glob "$outpath[0]/coverage/coverage.report";
 				if (-e $bam[0]){
+					`ln -s $bam[0] $opts{target}/$sample_name/`;
 					print BAM "$sample_name\t$bam[0]\n";
 				}
 			}

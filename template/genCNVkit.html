@@ -3,11 +3,26 @@
     <title>{{.Title}}</title>
 </head>
 <body>
+<fieldset style="width: 100px">
+<legend>WES largeCNV</legend>
 <form enctype="multipart/form-data" action="/genCNVkit" method="post">
     <textarea class="row col-sm-12" rows="5" cols="100" id="info" name="info" placeholder="sampleID chr start stop"></textarea>
     <br>
     <input type="submit" value="upload"></input>
 </form>
+</fieldset>
+<br>
 <a href="{{.Href}}">{{.Message}}</a>
+<fieldset style="width: 100px">
+<legend>WGS largeCNV</legend>
+<form enctype="multipart/form-data" action="/WGSlargeCNV" method="post">
+<label for="bamPath" class="col-sm-2 col-form-label">WGS分析目录：</label>
+<input type="text" style="width: 500px" id="wgsPath" name="wgspath" required="required" ></input>
+<br><label for="bamPath" class="col-sm-2 col-form-label">区域：</label>
+<textarea class="row col-sm-12" rows="5" cols="100" id="info" name="info" placeholder="chromosome    start    stop   len    Detect"></textarea>
+<br>
+<input type="submit" value="upload"></input>
+</form>
+</fieldset>
 </body>
 </html>

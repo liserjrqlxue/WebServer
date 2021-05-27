@@ -48,7 +48,8 @@ func main() {
 	http.HandleFunc("/deafInfo",deafInfo)
 	http.HandleFunc("/phoenix",phoenix)
 	http.HandleFunc("/kinship",kinship)
-
+	http.HandleFunc("/vcfanno",vcfanno)
+	http.HandleFunc("/WGSlargeCNV",WGSlargeCNV)
 
 	StaticDir["/static"] = "static"
 	StaticDir["/public"] = "public"

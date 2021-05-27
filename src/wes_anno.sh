@@ -22,7 +22,7 @@ export PYTHONPATH=/ifs9/B2C_COM_PH2/pipelines/wes-annotation/src/PVS/:$PYTHONPAT
 python /ifs9/B2C_COM_PH2/pipelines/wes-annotation/src/PVS/localautopvs1/autopvs1_in_bgianno.py -i $input.anno.acmg.spliceai.tsv -o $input.anno.acmg.spliceai.autopvs1.tsv -p 1
 conda deactivate
 
-$anno2xlsx -acmg -autoPVS1 -redis -prefix $outdir/$sampleID -snv $input.anno.acmg.spliceai.autopvs1.tsv -redisAddr 10.2.1.4:6380 -allgene -tier3Title /zfsyt1/B2C_RD_P2/USER/wangyaoshen/pipeline/cWES/anno2xlsx/test/Tier3.txt
+$anno2xlsx -acmg -autoPVS1 -redis -prefix $outdir/$sampleID -snv $input.anno.acmg.spliceai.autopvs1.tsv -redisAddr 10.2.1.4:6380 -allgene -tier3Title /ifs9/B2C_COM_P2/pub/sgd/Pipeline/analysis_pipeline/anno2xlsx/etc/Tier1.filter_variants.txt
 
 time=`date '+%Y-%m-%d %H:%M:%S'`
 echo $time $0 >> /ifs9/B2C_SGD/PROJECT/MGISEQ-2000_Project/exome_diagnose/exome_cnv/WebServer/run.log

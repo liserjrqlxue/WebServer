@@ -270,16 +270,19 @@ func logRequest(r *http.Request) {
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()                    //解析url传递的参数，对于POST则解析响应包的主体（request body）
-	fmt.Println("method:", r.Method) //获取请求的方法
-	if r.Method == "GET" {
-		t, _ := template.ParseFiles("template/login.gtpl")
-		log.Println(t.Execute(w, nil))
-	} else {
-		//请求的是登录数据，那么执行登录的逻辑判断
-		fmt.Println("username:", r.Form["username"])
-		fmt.Println("password:", r.Form["password"])
+	log.Println("method:", r.Method)
+	var Info Infos
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html",templatePath+"login.html")
+	simple_util.CheckErr(err)
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+
+	}else {
+		t.Execute(w, Info)
 	}
+	t.ExecuteTemplate(w, "login", Info)
+
 }
 
 var plotReadsLocalDir = "public" + pSep + "plotReadsLocal"
@@ -1044,3 +1047,74 @@ func kinship(w http.ResponseWriter, r *http.Request) {
 	}
 	t.ExecuteTemplate(w, "kinship", Info)
 }
+
+func vcfanno(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	var Info Infos
+	Info.Title = "vcfanno"
+	Info.Token = createToken()
+	t, err := template.ParseFiles(templatePath + "WESanno.html")
+	simple_util.CheckErr(err)
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		workdir := filepath.Join("public", "vcfanno", Info.Token)
+		os.MkdirAll(workdir, 0755)
+		file, handler, err := r.FormFile("uploadfile")
+		if err != nil {
+			log.Println(err)
+			Info.Err = err.Error()
+			t.Execute(w, Info)
+			return
+		}
+		defer file.Close()
+		f, err := os.Create(workdir + pSep + handler.Filename)
+		simple_util.CheckErr(err)
+		defer f.Close()
+		io.Copy(f, file)
+		cmd := []string{
+			filepath.Join(exPath,"src","vcfanno.sh"),
+			workdir + pSep + handler.Filename,
+			r.FormValue("gender"),
+		}
+		simple_util.RunCmd("bash", cmd...)
+		http.Redirect(w, r, workdir, http.StatusSeeOther)
+	} else {
+		t.Execute(w, Info)
+	}
+	t.ExecuteTemplate(w, "vcfanno", Info)
+}
+
+func WGSlargeCNV(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	var Info Infos
+	Info.Title = "WGSlargeCNV"
+	Info.Token = createToken()
+	t, err := template.ParseFiles(templatePath + "genCNVkit.html")
+	simple_util.CheckErr(err)
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		workdir := filepath.Join("public", "WGS_plot", Info.Token)
+		os.MkdirAll(workdir, 0755)
+		info := r.FormValue("info")
+		infoPath := filepath.Join(workdir, "info")
+		infoF, err := os.Create(infoPath)
+		simple_util.CheckErr(err)
+		fmt.Fprint(infoF, info)
+		fmt.Print(info)
+		infoF.Close()
+		cmd := []string{
+			filepath.Join(exPath,"src","WGS_plot.sh"),
+			r.FormValue("wgspath"),
+			filepath.Join(workdir, "info"),
+			workdir,
+		}
+		simple_util.RunCmd("bash", cmd...)
+		http.Redirect(w, r, workdir, http.StatusSeeOther)
+	}else {
+		t.Execute(w, Info)
+	}
+	t.ExecuteTemplate(w, "WGSlargeCNV", Info)
+}
+
