@@ -1,0 +1,451 @@
+{{define "plotReadsLocal"}}
+{{template "header" .}}
+	<div class="card-body container">
+    <form enctype="multipart/form-data" action="/plotReadsLocal" method="post" target="_blank">
+        <input type="hidden" name="token" id="token" value="{{.Token}}"></input>
+        <div class="form-group row">
+            <label for="bamPath" class="col-sm-2 col-form-label">Prefix</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" id="prefix" name="prefix"
+                       aria-describedby="prefixHelp" placeholder="Enter Prefix">
+                </input>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="bamPath" class="col-sm-2 col-form-label">Bam路径</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" id="bamPath" name="path" required="required"
+                       aria-describedby="bamPathHelp" placeholder="Enter Bam Path">
+                </input>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="chr" class="col-sm-2 col-form-label">Chromosome</label>
+            <div class="col-sm-4">
+                <select class="form-control" id="chr" name="chr" required="required">
+                    <option value="chr1">chr1</option>
+                    <option value="chr2">chr2</option>
+                    <option value="chr3">chr3</option>
+                    <option value="chr4">chr4</option>
+                    <option value="chr5">chr5</option>
+                    <option value="chr6">chr6</option>
+                    <option value="chr7">chr7</option>
+                    <option value="chr8">chr8</option>
+                    <option value="chr9">chr9</option>
+                    <option value="chr10">chr10</option>
+                    <option value="chr11">chr11</option>
+                    <option value="chr12">chr12</option>
+                    <option value="chr13">chr13</option>
+                    <option value="chr14">chr14</option>
+                    <option value="chr15">chr15</option>
+                    <option value="chr16">chr16</option>
+                    <option value="chr17">chr17</option>
+                    <option value="chr18">chr18</option>
+                    <option value="chr19">chr19</option>
+                    <option value="chr20">chr20</option>
+                    <option value="chr21">chr21</option>
+                    <option value="chr22">chr22</option>
+                    <option value="chrX">chrX</option>
+                    <option value="chrY">chrY</option>
+                    <option value="chrM_NC_012920.1">chrM</option>
+                </select>
+
+            </div>
+            <label for="readsLength" class="col-sm-2 col-form-label">Reads Length</label>
+            <div class="col-sm-4">
+                <select class="form-control" id="readsLength" name="Plotread_Length">
+                    <option value="100">100bp</option>
+                    <option value="150">150bp</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="startPos" class="col-sm-2 col-form-label">Start</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" id="startPos" name="Start" required="required"
+                       aria-describedby="StartHelp" placeholder="Enter Start Position">
+                </input>
+            </div>
+            <label for="endPos" class="col-sm-2 col-form-label">End</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" id="endPos" name="End"
+                       aria-describedby="StartHelp" placeholder="Enter End Position">
+                </input>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="position" id="at" value="at" checked="checked">
+                </input>
+                <label class="form-check-label" for="at">
+                    at
+                </label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="position" id="in" value="in">
+                </input>
+                <label class="form-check-label" for="in">
+                    in
+                </label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="position" id="to" value="to">
+                </input>
+                <label class="form-check-label" for="to">
+                    to
+                </label>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Submit</button>
+    </form>
+	</div>
+    <div class="jumbotron">
+        {{.Img}}
+        <img src="/public/plotReadsLocal/{{.Src}}"/>
+    </div>
+<script src="/static/js/jquery-3.3.1.js"></script>
+<script type="text/javascript">
+    //获取url中的参数
+    function getUrlParam(name){
+        var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+        var r = window.location.search.substr(1).match(reg);  //匹配目标参数
+        if (r != null) return unescape(r[2]); return null; //返回参数值
+    }
+    $('input[name="path"]').val(getUrlParam("path"));
+    $('select[name="chr"]').val(getUrlParam("chr"));
+    $('select[name="Poltread_Length"]').val(getUrlParam("Plotread_Length"));
+    $('input[name="Start"]').val(getUrlParam("Start"));
+    if(getUrlParam("at"))
+        $('input[value="at"]').click();
+    if(getUrlParam("between"))
+        $('input[value="between"]').click();
+    if(getUrlParam("from"))
+        $('input[value="from"]').click();
+    $('input[name="End"]').val(getUrlParam("End"));
+</script>
+{{template "footer" .}}
+{{end}}
+
+{{define "filterExcel"}}
+{{template "header" .}}
+<div class="card-body container">
+<fieldset class="form-control">
+<legend>功能1:基因过滤</legend>
+<form enctype="multipart/form-data" action="/filterExcel" method="post">	
+	<input class="form-control" type="file" name="uploadfile"></input>
+	<br>
+	<div class="col-sm-10 col-form-label">Tier1过滤基因(多个基因使用逗号分割):</div>
+	<input type="text" class="form-control" id="gene" name="gene"></input>
+	<br>
+    <input class="btn btn-primary btn-block" type="submit" value="upload"></input>
+	<br>
+</form>
+</fieldset>
+<br>
+<fieldset class="form-control">
+<legend>功能2:非OMIM基因过滤</legend>
+<form enctype="multipart/form-data" action="/filterKDNY" method="post">
+	<div class="col-sm-10 col-form-label">肾病基因集(多个样本使用换行符分割):</div>
+	<textarea class="form-control" rows="4" id="sample" name="sample" placeholder="sampleID"></textarea>
+	<br>
+	<input class="btn btn-primary btn-block" type="submit" value="upload"></input>
+	<br>
+</form>
+<br>
+<form enctype="multipart/form-data" action="/filterInfertility" method="post">
+	<div class="col-sm-10 col-form-label">不孕不育基因集(多个样本使用换行符分割):</div>
+	<textarea class="form-control" rows="4" id="sample" name="sample" placeholder="sampleID"></textarea>
+	<br>
+	<input class="btn btn-primary btn-block" type="submit" value="upload"></input>
+	<br>
+</form>
+</fieldset>
+<a href="{{.Href}}">{{.Message}}</a>
+</div>
+{{template "footer" .}}
+{{end}}
+
+{{define "BamExtractor"}}
+{{template "header" .}}
+<div class="card-body container">
+<fieldset class="form-control">
+<legend>指定区域Bam提取</legend>
+<form enctype="multipart/form-data" action="/BamExtractor" method="post">
+	<div class="col-sm-10 col-form-label">输入：样本编号 区域 (一次一个样本一个区域):</div>
+	<div class="col-sm-10 col-form-label">区域格式：chr 或 chr:start-stop</div>
+	<input class="form-control" type="text" id="sample" name="sample" placeholder="sampleID"></input>
+	<br>
+	<input class="form-control" type="text" id="position" name="position" placeholder="区域"></input>
+	<br>
+	<input class="btn btn-primary btn-block" type="submit" value="upload"></input>
+	<br>
+</form>
+</fieldset>
+<a href="{{.Href}}">{{.Message}}</a>
+</div>
+{{template "footer" .}}
+{{end}}
+
+{{define "ExomeDepthplot"}}
+{{template "header" .}}
+<div class="card-body container">
+<fieldset class="form-control">
+<legend>画ExomeDepth图</legend>
+<form enctype="multipart/form-data" action="/ExomeDepthplot" method="post">
+	<div class="col-sm-10 col-form-label">输入：样本编号 基因(一次一个样本一个基因):</div>
+	<input type="text" class="form-control" id="sample" name="sample" placeholder="sampleID"></input><br>
+	<input type="text" class="form-control" id="gene" name="gene" placeholder="基因"></input><br>
+	<div class="col-sm-10 col-form-label">是否X染色体基因:</div>
+	<select class="form-control" id="chr" name="chr" required="required">
+		<option value="A">常染色体</option>
+		<option value="X">X染色体</option>
+	</select>
+	<br>
+	<input class="btn btn-primary btn-block" type="submit" value="upload"></input>
+	<br>
+</form>
+</fieldset>
+<a href="{{.Href}}">{{.Message}}</a>
+</div>
+{{template "footer" .}}
+{{end}}
+
+{{define "plotExonCOV"}}
+{{template "header" .}}
+<div class="card-body container">
+<fieldset class="form-control">
+<legend>画Exon深度、覆盖度图</legend>
+<form enctype="multipart/form-data" action="/plotExonCOV" method="post">
+    <textarea class="form-control" rows="5" id="info" name="info" placeholder="sampleID   Gene"></textarea>
+    <br>
+    <input class="btn btn-primary btn-block" type="submit" value="upload"></input>
+	<br>
+</form>
+</fieldset>
+</div>
+{{template "footer" .}}
+{{end}}
+
+{{define "plotCNVkit"}}
+{{template "header" .}}
+<div class="card-body container">
+<fieldset class="form-control">
+<legend>画WES largeCNV图</legend>
+<form enctype="multipart/form-data" action="/plotCNVkit" method="post">
+    <textarea class="form-control" rows="5" id="info" name="info" placeholder="sampleID chr start stop"></textarea>
+    <br>
+    <input class="btn btn-primary btn-block" type="submit" value="upload"></input>
+	<br>
+</form>
+</fieldset>
+</div>
+{{template "footer" .}}
+{{end}}
+
+{{define "WGSlargeCNV"}}
+{{template "header" .}}
+<div class="card-body container">
+<fieldset class="form-control">
+<legend>WGS largeCNV</legend>
+<form enctype="multipart/form-data" action="/WGSlargeCNV" method="post">
+	<label for="bamPath" class="col-sm-10 col-form-label">WGS分析目录：</label>
+	<input class="form-control" type="text" id="wgsPath" name="wgspath" required="required" ></input>
+	<br>
+	<label for="bamPath" class="col-sm-10 col-form-label">区域：</label>
+	<textarea class="form-control" rows="5" id="info" name="info" placeholder="chromosome    start    stop   len    Detect"></textarea>
+	<br>
+	<input class="btn btn-primary btn-block" type="submit" value="upload"></input>
+	<br>
+</form>
+</fieldset>
+</div>
+{{template "footer" .}}
+{{end}}
+
+{{define "WESanno"}}
+{{template "header" .}}
+<div class="card-body container">
+<fieldset class="form-control">
+<legend>单点注释</legend>
+<form enctype="multipart/form-data" action="/WESanno" method="post">
+    <input class="form-control" type="text" id="sampleID" name="sampleID" placeholder="sampleID"/>
+    <br>
+    <textarea class="form-control" rows="5" id="info" name="info" placeholder="chromosome   start   stop    ref alt"></textarea>
+    <br>
+    <input class="btn btn-primary btn-block" type="submit" value="upload"/></input>
+	<br>
+</form>
+</fieldset>
+</div>
+{{template "footer" .}}
+{{end}}
+
+{{define "vcfanno"}}
+{{template "header" .}}
+<div class="card-body container">
+<fieldset class="form-control">
+<legend>vcf注释</legend>
+<form enctype="multipart/form-data" action="/vcfanno" method="post">
+    <div>上传VCF文件：</div>
+	<input class="form-control" type="file" name="uploadfile"></input>
+    <br>
+    <div>样本性别：</div>
+    <select class="form-control" id="gender" name="gender" required="required">
+		<option value="F">女</option>
+		<option value="M">男</option>
+	</select>
+	<br>
+    <input class="btn btn-primary btn-block" type="submit" value="upload"></input>
+	<br>
+</form>
+</fieldset>
+</div>
+{{template "footer" .}}
+{{end}}
+
+{{define "phoenix"}}
+{{template "header" .}}
+<div class="card-body container">
+<fieldset class="form-control">
+<legend>phoenix</legend>
+<form  action="/phoenix" method="post">
+    <input class="form-control" type="text" id="chip" name="chip" placeholder="chip"/>
+	<br>
+	<textarea class="row col-sm-12" rows="5" cols="100" id="info" name="info" placeholder="chip-librarynum"></textarea>
+    <br>
+    <input class="btn btn-primary btn-block" type="submit" value="upload"/>
+	<br>
+</form>
+</fieldset>
+</div>
+{{template "footer" .}}
+{{end}}
+
+{{define "findfile"}}
+{{template "header" .}}
+<div class="card-body container">
+<fieldset class="form-control">
+<legend>分析结果提取</legend>
+	<form enctype="multipart/form-data" action="/findfile" method="post">
+		<div >
+			<input type="hidden" name="token" id="token" value="{{.Token}}"></input>
+			<label for="info" class="col-sm-12 col-form-label">样本编号(多个样本以以换行符分隔，请勿带空格，自动转化B/D/L等字符 例如用19B1234567 也可以找到19D1234567)<br></label>
+			<textarea class="form-control" rows="5" cols="100" id="info" name="info" placeholder="sampleID"></textarea>
+		</div>
+		<div >
+			<label for="QC" class="col-sm-12 col-form-label">QC过滤严谨度<br>strict: 全外样本 严格根据Q30不低于85,平均深度不低于100x,20x覆盖度不低于95%筛选合格样本，适用于全外新版样本. 其余panel样本根据30不低于85,平均深度不低于100x 的条件筛选合格样本<br>loose: 全外样本根据 Q30不低于80,平均深度不低于79x的旧版质控筛选, 其余panel样本 根据Q30不低于80，平均深度不低于99x 的让步接收条件 筛选合格样本<br></label>
+			<select class="form-control" id="QC" name="QC">
+				<option value="strict">strict</option>
+				<option value="loose">loose</option>
+			</select>
+		</div>
+		<div>
+			<label class="col-sm-10 col-form-label">需要的文件类型</label><br>
+			<label><input name="filetype" type="checkbox" value="vcf" />vcf</label><br>
+			<label><input name="filetype" type="checkbox" value="Tier1" />Tier1</label><br>
+			<label><input name="filetype" type="checkbox" value="excel" />excel(包括tier123旧版bed.gz，单病的excel表等 所有excel结果)</label><br>
+			<label><input name="filetype" type="checkbox" value="bam" />BAM路径</label><br>
+		</div>
+		<input class="btn btn-primary btn-block" type="submit" value="提交" ></input>
+		<br>
+	</form> 
+</fieldset>
+</div>
+{{template "footer" .}}
+{{end}}
+
+{{define "Manual_Trio"}}
+{{template "header" .}}
+<div class="card-body container">
+<fieldset class="form-control">
+<legend>单样本、家系结果生成</legend>
+<form enctype="multipart/form-data" action="/Manual_Trio" method="post">
+		<label class="col-sm-12 col-form-label">欢迎使用自助跑家系页面！<br><br>
+			样本编号填写说明:<br>
+			先证者放第一位!<br>
+			多个样本以换行符分隔，前后请勿带空格，多个家系之间用空行分隔!也就是回车分隔！ <br>
+			脚本将自动转化B/D/L等字符 例如用19B1234567 也可以找到19D1234567<br>
+			但是-1，-2，R这类后缀请去掉后再填入！  (例如输入19B1234567-1找不到19B1234567，但是输入19B1234567能找到19B1234567-1)<br></label>
+		<textarea class="form-control" rows="5" cols="100" id="sampleID" name="sampleID" placeholder="sampleID"></textarea><br><br>
+		<label class="col-sm-12 col-form-label">如家系成员含有质控不合格样本，请自行调整阈值，默认值（Q20：90；Q30：85；Depth：100；Cov_20X：95）</label><br><br>
+		
+		<div class="col-sm-12 form-group row">
+			<label class="col-form-label">Q20：</label>
+			<textarea class="col-sm-2 col-form-label" style="resize:none;" rows="1" cols="3" id="Q20" name="Q20" >90</textarea> &nbsp
+			<label class="col-form-label">Q30：</label>
+			<textarea class="col-sm-2 col-form-label" style="resize:none;" rows="1" cols="3" id="Q30" name="Q30" >85</textarea> &nbsp
+			<label class="col-form-label">Depth：</label>
+			<textarea class="col-sm-2 col-form-label" style="resize:none;" rows="1" cols="3" id="DEPTH" name="DEPTH" >100</textarea> &nbsp
+			<label class="col-form-label">Cov_20X：</label>
+			<textarea class="col-sm-2 col-form-label" style="resize:none;" rows="1" cols="3" id="COV20" name="COV20" >95</textarea><br>
+		</div>
+		<label class="col-sm-12 col-form-label" for="bamPath" class="col-sm-2 col-form-label"><br>附加参数: 如果是经典家系写trio，如果是夫妻样本写couple，非经典家系就空着,不输入任何东西,如果只跑单样本的线下表就填single<br></label>
+		<textarea class="form-control" rows="1" cols="100" id="info" name="info" placeholder="single or trio or couple or empty"></textarea>
+		<br>
+		<input class="btn btn-primary btn-block" type="submit" value="提交"></input>
+		<br>
+</form> 
+</fieldset>
+</div>
+{{template "footer" .}}
+{{end}}
+
+{{define "kinship"}}
+{{template "header" .}}
+<div class="card-body container">
+<fieldset class="form-control">
+<legend>亲缘关系分析</legend>
+<form enctype="multipart/form-data" action="/kinship" method="post">
+	<div class="col-sm-12 col-form-label"> 每行一个样本编号，按先证者，父，母，顺序排列</div><br>
+    <textarea class="form-control" rows="3" cols="50" id="info" name="info" placeholder="sampleID"></textarea>
+    <br>
+    <input class="btn btn-primary btn-block" type="submit" value="提交"></input>
+	<br>
+</form>
+</fieldset>
+</div>
+{{template "footer" .}}
+{{end}}
+
+{{define "triploid"}}
+{{template "header" .}}
+<div class="card-body container">
+<fieldset class="form-control">
+<legend>样本三倍体判别</legend>
+<form enctype="multipart/form-data" action="/triploid" method="post">
+	<div class="col-sm-12 col-form-label"> 样本注释文件路径（${sample}.out）：</div><br>
+    <textarea class="form-control" rows="1" cols="50" id="path" name="path" placeholder="sample anno path"></textarea>
+    <br>
+    <input class="btn btn-primary btn-block" type="submit" value="提交"></input>
+	<br>
+</form>
+</fieldset>
+</div>
+{{template "footer" .}}
+{{end}}
+
+{{define "contamination"}}
+{{template "header" .}}
+<div class="card-body container">
+<fieldset class="form-control">
+<legend>样本污染判别</legend>
+<form enctype="multipart/form-data" action="/contamination" method="post">
+	<div class="col-sm-12 col-form-label">样本VCF文件路径（${sample}.final.vcf.gz）</div><br>
+    <textarea class="form-control" rows="1" cols="50" id="path" name="path" placeholder="sample vcf path"></textarea>
+    <br>
+    <input class="btn btn-primary btn-block" type="submit" value="提交"></input>
+	<br>
+</form>
+</fieldset>
+</div>
+{{template "footer" .}}
+{{end}}
+
+{{define "Drug"}}
+{{template "header" .}}
+<div class="card-body container">
+<iframe src="http://172.16.56.38:9089/" frameborder="0" scrolling="no" style="width:100vh; height:100vh"> 
+</iframe>
+</div>
+{{template "footer" .}}
+{{end}}
