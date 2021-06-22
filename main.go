@@ -41,9 +41,15 @@ func main() {
 	http.HandleFunc("/WGSlargeCNV",WGSlargeCNV)
 	http.HandleFunc("/triploid",triploid)
 	http.HandleFunc("/contamination",contamination)
-	http.HandleFunc("/Drug",Drug)
+	http.HandleFunc("/qingdaoWGS",qingdaoWGS)
+	http.HandleFunc("/drug_report",drug_report)
+	http.HandleFunc("/thalassemia_report",thalassemia_report)
+	http.HandleFunc("/deaf_report",deaf_report)
 	http.HandleFunc("/changsha_deaf",changsha_deaf)
-	
+	http.HandleFunc("/tianjin_deaf",tianjin_deaf)
+	http.HandleFunc("/shenzhen_thalassemia",shenzhen_thalassemia)
+	http.HandleFunc("/Nifty3",Nifty3)
+
 	StaticDir["/static"] = "static"
 	StaticDir["/public"] = "public"
 	//StaticDir["/ajax"] = "ajax"
@@ -66,11 +72,12 @@ func main() {
 	Permission["triploid"] = ""
 	Permission["contamination"] = ""
 	Permission["qingdaoWGS"] = ""
-	Permission["Drug"] = ""
-	Permission["thalassemia"] = ""
-	Permission["deaf"] = ""
+	Permission["drug_report"] = ""
+	Permission["thalassemia_report"] = ""
+	Permission["deaf_report"] = ""
 	Permission["changsha_deaf"] = ""
-	Permission["tianjin_thalassemia"] = ""
+	Permission["tianjin_deaf"] = ""
+	Permission["shenzhen_thalassemia"] = ""
 	Permission["Nifty3"] = ""
 	
 

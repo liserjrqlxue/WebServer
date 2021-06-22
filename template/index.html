@@ -4,7 +4,6 @@
 window.onload=function(){
 	group = {{.Permission}}.split(',')
 	for ( var i = 0; i <group.length; i++){
-		console.log(group[i])
 		if (document.getElementById(group[i])){
 			document.getElementById(group[i]).className = '';
 		}
@@ -31,7 +30,7 @@ window.onload=function(){
         <div class="row" style="margin-bottom: 12;">
 			<div class="col-md-6">
 			<fieldset class="form-control">
-			<legend>信息分析工具</legend>
+			<legend style="width:-webkit-fit-content">信息分析工具</legend>
 				<div class="d-none" id="WESanno" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
 				<h2><a style="color:black" href="WESanno" role="button">全外位点注释 &raquo;</a></h2>
 				<p>需要位点的ref和alt，ref必须与hg19参考基因组一致</p>
