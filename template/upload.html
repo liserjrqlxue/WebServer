@@ -1,12 +1,28 @@
-<html>
-<head>
-    <title>{{.Title}}</title>
-</head>
-<body>
-<form enctype="multipart/form-data" action="/upload" method="post">
-    <input type="file" name="uploadfile"></input>
-    <input type="hidden" name="token" value="{{.Token}}"></input>
-    <input type="submit" value="upload"></input>
-</form>
-</body>
-</html>
+<div class="container-fluid">
+	<div class="row-fluid">
+		<div class="span12">
+			<div class="tabbable" id="tabs-796877">
+				<ul class="nav nav-tabs">
+					<li class="active">
+						<a href="#panel-94835" data-toggle="tab">信息分析工具</a>
+					</li>
+					<li>
+						<a href="#panel-738686" data-toggle="tab">临床样本解读工具</a>
+					</li>
+				</ul>
+				<div class="tab-content">
+					<div class="tab-pane active" id="panel-94835">
+						<div>
+							第一部分
+						</div>
+					</div>
+					<div class="tab-pane" id="panel-738686">
+						<p>
+							第二部分内容.
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

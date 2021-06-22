@@ -307,7 +307,7 @@ fieldset {
 
 legend {
   display: block;
-  width: 100%;
+  width: width:-webkit-fit-content;
   max-width: 100%;
   padding: 0;
   margin-bottom: .5rem;

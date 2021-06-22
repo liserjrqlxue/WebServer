@@ -1,6 +1,7 @@
 {{define "plotReadsLocal"}}
 {{template "header" .}}
 <main>
+	<div class="card-body container">
     <form enctype="multipart/form-data" action="/plotReadsLocal" method="post" target="_blank">
         <input type="hidden" name="token" id="token" value="{{.Token}}"></input>
         <div class="form-group row">
@@ -98,6 +99,7 @@
         </div>
         <button type="submit" class="btn btn-primary btn-block">Submit</button>
     </form>
+	</div>
     <div class="jumbotron">
         {{.Img}}
         <img src="/public/plotReadsLocal/{{.Src}}"/>

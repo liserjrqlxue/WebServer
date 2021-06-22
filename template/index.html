@@ -1,65 +1,129 @@
 {{define "index"}}
 {{template "header" .}}
+<script>
+window.onload=function(){
+	group = {{.Permission}}.split(',')
+	for ( var i = 0; i <group.length; i++){
+		console.log(group[i])
+		if (document.getElementById(group[i])){
+			document.getElementById(group[i]).className = '';
+		}
+	}
+	if (document.getElementById("user").innerHTML != "未登录"){
+		document.getElementById("login").text = '更换账户'
+		document.getElementById("login2").text = '更换账户'
+	}
+
+}
+</script>
 <main role="main">
     <!-- Main jumbotron for a primary marketing message or call to action -->
     <div class="jumbotron">
         <div class="container">
             <h1 class="display-3">信息分析及解读工具合集</h1>
             <p>网页包括reads图、CNV图、外显子图、家系合并、样本分析结果导出等功能，具体使用方法请进入工具界面，有疑问请联系叶浩东(yehaodong@genomics.cn)。</p>
-            <p><a class="btn btn-primary btn-lg" href="/login" role="button">Login &raquo;</a></p>
+            <p><a class="btn btn-primary btn-lg" id="login2" href="/login" role="button" Onclick="return login_check2()">Login &raquo;</a></p>
         </div>
     </div>
-
-    <div class="container">
+	
+    <div class=" container">
         <!-- Example row of columns -->
-        <div class="row" style="margin-bottom: 10;">
-            <div class="col-md-4" style="margin:10">	
-                <h2>本地画reads图</h2>
-                <p>需要bam文件路径，在Tier1表 quality Sheet中</p>
-                <p><a class="btn btn-secondary" href="plotReadsLocal" role="button">点击进入页面 &raquo;</a></p>
-            </div>
-            <div class="col-md-4" style="margin:10">
-                <h2>画largeCNV图</h2>
-                <p>需要样本编号及对应坐标</p>
-                <p><a class="btn btn-secondary" href="genCNVkit" role="button">点击进入页面 &raquo;</a></p>
-            </div>
-            <div class="col-md-4" >
-                <h2>全外位点注释</h2>
-                <p>需要位点的ref和alt，ref必须与hg19参考基因集一致</p>
-                <p><a class="btn btn-secondary" href="WESanno" role="button">点击进入页面 &raquo;</a></p>
-            </div>
-			<div class="col-md-4" >
-				<h2>线下家系合并（2.0解读系统格式）</h2>
-				<p>trio经典家系，couple夫妻双人家系，single单样本Tier表，allgene非OMIM基因Tier表</p>
-				<p><a class="btn btn-secondary" href="Manual_Trio" role="button">点击进入页面 &raquo;</a></p>
+        <div class="row" style="margin-bottom: 12;">
+			<div class="col-md-6">
+			<fieldset class="form-control">
+			<legend>信息分析工具</legend>
+				<div class="d-none" id="WESanno" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+				<h2><a style="color:black" href="WESanno" role="button">全外位点注释 &raquo;</a></h2>
+				<p>需要位点的ref和alt，ref必须与hg19参考基因组一致</p>
+				</div>
+				<div class="d-none" id="vcfanno" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+				<h2><a style="color:black" href="vcfanno" role="button">全外VCF注释 &raquo;</a></h2>
+				<p>需要上传vcf文件</p>
+				</div>
+				<div class="d-none" id="filterExcel" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+                <h2><a style="color:black" href="filterExcel" role="button">Tier1表基因集过滤 &raquo;</a></h2>
+                <p>功能1：在Tier1表的基础上过滤指定基因的工具，适用于KY1003，虚拟panel等样本；功能2：非OMIM基因过滤（肾病、不孕不育）</p>
+				</div>
+				<div class="d-none" id="Drug" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+                <h2><a style="color:black" href="Drug" role="button">药物报告 &raquo;</a></h2>
+                <p>药物报告</p>
+				</div>
+				<div class="d-none" id="thalassemia" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+                <h2><a style="color:black" href="thalassemia" role="button">地贫报告 &raquo;</a></h2>
+                <p>地贫报告</p>
+				</div>
+				<div class="d-none" id="deaf" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+                <h2><a style="color:black" href="deaf" role="button">耳聋报告 &raquo;</a></h2>
+                <p>耳聋报告</p>
+				</div>
+				<div class="d-none" id="triploid" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+                <h2><a style="color:black" href="triploid" role="button">样本三倍体判断 &raquo;</a></h2>
+                <p>输入样本注释路径判断样本是否三倍体</p>
+				</div>
+				<div class="d-none" id="contamination" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+                <h2><a style="color:black" href="contamination" role="button">样本污染判断 &raquo;</a></h2>
+                <p>输入样本vcf路径判断样本是否污染</p>
+				</div>
+			</fieldset>
 			</div>
-			<div class="col-md-4" >
-				<h2>Tier1表指定基因集过滤工具、Bam提取工具、ExomeDepth图工具</h2>
-				<p>在Tier1表的基础上过滤指定基因的工具，适用于KY1003，虚拟panel等样本；Bam文件提取工具，ExomeDepth图工具</p>
-				<p><a class="btn btn-secondary" href="filterExcel" role="button">点击进入页面 &raquo;</a></p>
-			</div>
-			<div class="col-md-4" >
-				<h2>亲缘关系分析工具</h2>
-				<p>使用样本编号自动分析亲缘关系</p>
-				<p><a class="btn btn-secondary" href="kinship" role="button">点击进入页面 &raquo;</a></p>
-			</div>
-			<div class="col-md-4" >
-				<h2>画外显子柱状图</h2>
-				<p>画指定样本指定基因的外显子柱状图，包括基因中各外显子的覆盖度和深度</p>
-				<p><a class="btn btn-secondary" href="plotExonCnv" role="button">点击进入页面 &raquo;</a></p>
-			</div>
-			<div class="col-md-4" >
-				<h2>耳聋实验信息样本录入</h2>
-				<p>耳聋实验信息样本录入</p>
-				<p><a class="btn btn-secondary" href="deafInfo" role="button">点击进入页面 &raquo;</a></p>
-			</div>
-			<div class="col-md-4" >
-				<h2>样本分析结果导出</h2>
-				<p>自动导出结果合格的信息分析结果</p>
-				<p><a class="btn btn-secondary" href="findfile" role="button">点击进入页面 &raquo;</a></p>
+			<div class="col-md-6">
+			<fieldset class="form-control">
+			<legend>样本解读工具</legend>
+				<div class="d-none" id="plotReadsLocal" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+				<h2><a style="color:black" href="plotReadsLocal" role="button">画样本reads图 &raquo;</a></h2>
+				<p>需要bam文件路径</p>
+				</div>
+				<div class="d-none" id="plotCNVkit" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+                <h2><a style="color:black" href="plotCNVkit" role="button"> 画WES CNVkit图 &raquo;</a></h2>
+                <p>需要样本编号及对应CNV区域坐标</p>
+				</div>
+				<div class="d-none" id="ExomeDepthplot" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+                <h2><a style="color:black" href="ExomeDepthplot" role="button"> 画ExomeDepth图 &raquo;</a></h2>
+                <p>需要样本编号及基因名</p>
+				</div>
+				<div class="d-none" id="plotExonCOV" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+                <h2><a style="color:black" href="plotExonCOV" role="button"> 画Exon深度覆盖度图 &raquo;</a></h2>
+                <p>需要样本编号及基因名</p>
+				</div>
+				<div class="d-none" id="Manual_Trio" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+                <h2><a style="color:black" href="Manual_Trio" role="button"> 家系合并（2.0解读系统格式） &raquo;</a></h2>
+                <p>trio经典家系，couple夫妻双人家系，single单样本Tier表，allgene非OMIM基因Tier表</p>
+				</div>
+				<div class="d-none" id="findfile" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+                <h2><a style="color:black" href="findfile" role="button"> 样本分析结果导出 &raquo;</a></h2>
+                <p>输入样本编号导出样本的信息分析结果，包括Tier表，vcf文件，bam路径</p>
+				</div>
+				<div class="d-none" id="kinship" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+                <h2><a style="color:black" href="kinship" role="button">亲缘关系分析 &raquo;</a></h2>
+                <p>输入样本编号自动分析亲缘关系</p>
+				</div>
+				<div class="d-none" id="BamExtractor" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+                <h2><a style="color:black" href="BamExtractor" role="button">临床样本bam区域提取 &raquo;</a></h2>
+                <p>提取临床样本bam文件中的指定区域，临床样本bam文件保留60天</p>
+				</div>
+				<div class="d-none" id="WGSlargeCNV" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+                <h2><a style="color:black" href="WGSlargeCNV" role="button"> 画WGS largeCNV图 &raquo;</a></h2>
+                <p>需要样本分析目录及对应CNV区域坐标</p>
+				</div>
+				<div class="d-none" id="qingdaoWGS" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+                <h2><a style="color:black" href="qingdaoWGS" role="button">青岛WGS信息提交 &raquo;</a></h2>
+                <p>青岛WGS信息提交</p>
+				</div>
+				<div class="d-none" id="changsha_deaf" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+                <h2><a style="color:black" href="changsha_deaf" role="button">长沙耳聋生信 &raquo;</a></h2>
+                <p>长沙耳聋生信</p>
+				</div>
+				<div class="d-none" id="tianjin_thalassemia" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+                <h2><a style="color:black" href="tianjin_thalassemia" role="button">天津地贫生信 &raquo;</a></h2>
+                <p>天津地贫生信</p>
+				</div>
+				<div class="d-none" id="Nifty3" style="margin:10;border-bottom: 2px solid #e9ecef;margin-bottom: 20px;">
+                <h2><a style="color:black" href="Nifty3" role="button">Nifty3生信 &raquo;</a></h2>
+                <p>Nifty3生信</p>
+				</div>
+			</fieldset>
 			</div>
         </div>
-        <hr/>
     </div> <!-- /container -->
 </main>
 {{template "footer" .}}

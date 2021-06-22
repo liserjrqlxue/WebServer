@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/liserjrqlxue/RDMO/router"
 	"log"
 	"net/http"
 	"strings"
@@ -18,42 +17,61 @@ var (
 )
 
 var StaticDir = make(map[string]string)
+var Permission = make(map[string]string)
 
 func main() {
 	flag.Parse()
 	// 设置访问的路由
 	//http.HandleFunc("/Web_url_name", func_name)
 	http.HandleFunc("/login", login)
-	http.HandleFunc("/autoReport", autoReport)
-	http.HandleFunc("/datatables", router.LoadMO)
 	http.HandleFunc("/plotReadsLocal", plotReadsLocal)
-	http.HandleFunc("/plotMultiReadsLocal", plotMultiReadsLocal)
-	http.HandleFunc("/upload", upload)
-	http.HandleFunc("/fixHemi", fixHemi)
 	http.HandleFunc("/filterExcel", filterExcel)
 	http.HandleFunc("/filterKDNY", filterKDNY)
 	http.HandleFunc("/filterInfertility", filterInfertility)
 	http.HandleFunc("/BamExtractor",BamExtractor)
 	http.HandleFunc("/ExomeDepthplot",ExomeDepthplot)
-	http.HandleFunc("/plotExonCnv", plotExonCnv)
-	http.HandleFunc("/genCNVkit", genCNVkit)
-	http.HandleFunc("/updateMO", router.UpdateMO)
+	http.HandleFunc("/plotExonCOV", plotExonCOV)
 	http.HandleFunc("/WESanno", WESanno)
 	http.HandleFunc("/plotCNVkit", plotCNVkit)
 	http.HandleFunc("/findfile",findfile)
-	http.HandleFunc("/SamplePlotReadsLocal",SamplePlotReadsLocal)
-	http.HandleFunc("/unsend",unsend)
 	http.HandleFunc("/Manual_Trio",Manual_Trio)
-	//http.HandleFunc("/Scan_Week_Upload",Scan_Week_Upload)
-	http.HandleFunc("/deafInfo",deafInfo)
 	http.HandleFunc("/phoenix",phoenix)
 	http.HandleFunc("/kinship",kinship)
 	http.HandleFunc("/vcfanno",vcfanno)
 	http.HandleFunc("/WGSlargeCNV",WGSlargeCNV)
-
+	http.HandleFunc("/triploid",triploid)
+	http.HandleFunc("/contamination",contamination)
+	http.HandleFunc("/Drug",Drug)
+	
 	StaticDir["/static"] = "static"
 	StaticDir["/public"] = "public"
-	StaticDir["/ajax"] = "ajax"
+	//StaticDir["/ajax"] = "ajax"
+	
+	Permission["plotReadsLocal"] = "wes,wgs"
+	Permission["filterExcel"] = "wes"
+	Permission["filterKDNY"] = "wes"
+	Permission["filterInfertility"] = "wes"
+	Permission["BamExtractor"] = "wes,wgs"
+	Permission["ExomeDepthplot"] = "wes"
+	Permission["plotExonCOV"] = "wes"
+	Permission["WESanno"] = ""
+	Permission["plotCNVkit"] = "wes"
+	Permission["findfile"] = "wes"
+	Permission["Manual_Trio"] = "wes"
+	Permission["phoenix"] = ""
+	Permission["kinship"] = "wes"
+	Permission["vcfanno"] = "wes,wgs"
+	Permission["WGSlargeCNV"] = "wgs"
+	Permission["triploid"] = ""
+	Permission["contamination"] = ""
+	Permission["qingdaoWGS"] = ""
+	Permission["Drug"] = ""
+	Permission["thalassemia"] = ""
+	Permission["deaf"] = ""
+	Permission["changsha_deaf"] = ""
+	Permission["tianjin_thalassemia"] = ""
+	Permission["Nifty3"] = ""
+	
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// static file server
