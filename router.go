@@ -61,7 +61,7 @@ func getUser(r *http.Request) (string,string){
 		"-ip", r.RemoteAddr,
 	}
 	log.Println(params)
-	out,err := exec.Command("python", params...).Output()
+	out,err := exec.Command("python3", params...).Output()
 	if string(out) != "N" && err == nil{
 		username := strings.Split(string(out),"\t")[0]
 		permission := strings.Split(string(out),"\t")[1]
@@ -95,7 +95,7 @@ func get_permission(r *http.Request, function_name string) bool{
 	if function_name == ""{
 		return true
 	}
-	out,err := exec.Command("python", params...).Output()
+	out,err := exec.Command("python3", params...).Output()
 	if string(out) == "Y" && err == nil{
 		return true
 	}else{
@@ -220,7 +220,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 			"-ip", ip,
 			}
 		log.Println(params)
-		out,err := exec.Command("python", params...).Output()
+		out,err := exec.Command("python3", params...).Output()
 		if string(out) == "Y" && err == nil{
 			fmt.Fprintf(w, "<script>alert('登陆成功');window.location.href = '/';</script>")
 		}else{
@@ -958,6 +958,27 @@ func Drug(w http.ResponseWriter, r *http.Request) {
 		//new function
 	} else {
 		t.ExecuteTemplate(w, "Drug", Info)
+	}
+}
+
+func changsha_deaf(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "Drug"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["new"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		//new function
+	} else {
+		t.ExecuteTemplate(w, "changsha_deaf", Info)
 	}
 }
 

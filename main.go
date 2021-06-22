@@ -42,6 +42,7 @@ func main() {
 	http.HandleFunc("/triploid",triploid)
 	http.HandleFunc("/contamination",contamination)
 	http.HandleFunc("/Drug",Drug)
+	http.HandleFunc("/changsha_deaf",changsha_deaf)
 	
 	StaticDir["/static"] = "static"
 	StaticDir["/public"] = "public"
