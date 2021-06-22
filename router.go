@@ -60,7 +60,6 @@ func getUser(r *http.Request) (string,string){
 		"-m", "check_login",
 		"-ip", r.RemoteAddr,
 	}
-	log.Println(params)
 	out,err := exec.Command("python3", params...).Output()
 	if string(out) != "N" && err == nil{
 		username := strings.Split(string(out),"\t")[0]
@@ -181,8 +180,7 @@ func sayhelloName(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	Info.Permission=strings.Join(function_list, ",")
-	log.Println(Info.User)
-     t.ExecuteTemplate(w, "index", Info)
+    t.ExecuteTemplate(w, "index", Info)
 }
 
 func logRequest(r *http.Request) {
@@ -219,7 +217,6 @@ func login(w http.ResponseWriter, r *http.Request) {
 			"-p", password,
 			"-ip", ip,
 			}
-		log.Println(params)
 		out,err := exec.Command("python3", params...).Output()
 		if string(out) == "Y" && err == nil{
 			fmt.Fprintf(w, "<script>alert('登陆成功');window.location.href = '/';</script>")
@@ -703,9 +700,6 @@ func vcfanno(w http.ResponseWriter, r *http.Request) {
 }
 
 func phoenix(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("method:", r.Method)
-	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
-	simple_util.CheckErr(err)
 	var Info Infos
 	Info.Title = "phoenix"
 	Info.Token = createToken()
@@ -725,12 +719,11 @@ func phoenix(w http.ResponseWriter, r *http.Request) {
 		infoF, err := os.Create(infoPath)
 		simple_util.CheckErr(err)
 		_, err = fmt.Fprint(infoF, info)
+		log.Println(info)
 		simple_util.CheckErr(err)
-		fmt.Print(info)
 		simple_util.CheckErr(infoF.Close())
 	} else {
 		r.ParseForm() //暂时不支持get参数
-		t.ExecuteTemplate(w, "phoenix", Info)
 	}
 }
 
@@ -939,16 +932,15 @@ func contamination(w http.ResponseWriter, r *http.Request) {
 		t.ExecuteTemplate(w, "contamination", Info)
 	}
 }
-
-func Drug(w http.ResponseWriter, r *http.Request) {
+func qingdaoWGS(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("method:", r.Method)
 	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
 	simple_util.CheckErr(err)
 	var Info Infos
-	Info.Title = "Drug"
+	Info.Title = "青岛WGS"
 	Info.Token = createToken()
 	Info.User,Info.Permission = getUser(r)
-	if !get_permission(r,Permission["new"]) {
+	if !get_permission(r,Permission["qingdaoWGS"]) {
 		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
 		return
 	}
@@ -957,8 +949,70 @@ func Drug(w http.ResponseWriter, r *http.Request) {
 		logRequest(r)
 		//new function
 	} else {
-		t.ExecuteTemplate(w, "Drug", Info)
+		t.ExecuteTemplate(w, "qingdaoWGS", Info)
 	}
+}
+
+func drug_report(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "药物报告系统"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["drug_report"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		//new function
+	} else {
+		t.ExecuteTemplate(w, "drug_report", Info)
+	}
+}
+func thalassemia_report(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "地贫报告系统"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["thalassemia_report"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		//new function
+	} else {
+		t.ExecuteTemplate(w, "thalassemia_report", Info)
+	}
+}
+
+func deaf_report(w http.ResponseWriter, r *http.Request) {
+        fmt.Println("method:", r.Method)
+        t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+        simple_util.CheckErr(err)
+        var Info Infos
+        Info.Title = "耳聋报告系统"
+        Info.Token = createToken()
+        Info.User,Info.Permission = getUser(r)
+        if !get_permission(r,Permission["deaf_report"]) {
+                fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+                return
+        }
+        if r.Method == "POST" {
+                r.ParseMultipartForm(32 << 20)
+                logRequest(r)
+                //new function
+        } else {
+                t.ExecuteTemplate(w, "deaf_report", Info)
+        }
 }
 
 func changsha_deaf(w http.ResponseWriter, r *http.Request) {
@@ -966,10 +1020,10 @@ func changsha_deaf(w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
 	simple_util.CheckErr(err)
 	var Info Infos
-	Info.Title = "Drug"
+	Info.Title = "长沙耳聋信息分析"
 	Info.Token = createToken()
 	Info.User,Info.Permission = getUser(r)
-	if !get_permission(r,Permission["new"]) {
+	if !get_permission(r,Permission["changsha_deaf"]) {
 		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
 		return
 	}
@@ -982,6 +1036,67 @@ func changsha_deaf(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func tianjin_deaf(w http.ResponseWriter, r *http.Request) {
+        fmt.Println("method:", r.Method)
+        t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+        simple_util.CheckErr(err)
+        var Info Infos
+        Info.Title = "天津耳聋信息分析"
+        Info.Token = createToken()
+        Info.User,Info.Permission = getUser(r)
+        if !get_permission(r,Permission["tianjin_deaf"]) {
+                fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+                return
+        }
+        if r.Method == "POST" {
+                r.ParseMultipartForm(32 << 20)
+                logRequest(r)
+                //new function
+        } else {
+                t.ExecuteTemplate(w, "tianjin_deaf", Info)
+        }
+}
+
+func shenzhen_thalassemia(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "深圳地贫信息分析"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["shenzhen_thalassemia"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		//new function
+	} else {
+		t.ExecuteTemplate(w, "shenzhen_thalassemia", Info)
+	}
+}
+func Nifty3(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "Nifty3"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["Nifty3"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		//new function
+	} else {
+		t.ExecuteTemplate(w, "Nifty3", Info)
+	}
+}
 
 func new(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("method:", r.Method)
