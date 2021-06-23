@@ -24,6 +24,7 @@ func main() {
 	// 设置访问的路由
 	//http.HandleFunc("/Web_url_name", func_name)
 	http.HandleFunc("/login", login)
+	http.HandleFunc("/change_password", change_password)
 	http.HandleFunc("/plotReadsLocal", plotReadsLocal)
 	http.HandleFunc("/filterExcel", filterExcel)
 	http.HandleFunc("/filterKDNY", filterKDNY)
@@ -55,7 +56,7 @@ func main() {
 	StaticDir["/public"] = "public"
 	//StaticDir["/ajax"] = "ajax"
 	
-	Permission["plotReadsLocal"] = "wes,wgs"
+	Permission["plotReadsLocal"] = "wes,wgs,Nifty"
 	Permission["filterExcel"] = "wes"
 	Permission["filterKDNY"] = "wes"
 	Permission["filterInfertility"] = "wes"
@@ -80,7 +81,7 @@ func main() {
 	Permission["tianjin_deaf"] = "tianjin_deaf"
 	Permission["shenzhen_deaf"] = "shenzhen_deaf"
 	Permission["shenzhen_thalassemia"] = "shenzhen_thalassemia"
-	Permission["Nifty3"] = ""
+	Permission["Nifty3"] = "Nifty"
 	
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

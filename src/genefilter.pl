@@ -1,1 +1,0 @@
-/ifs9/B2C_COM_P2/pub/sgd/Pipeline/exome_diagnose_V0/tools/genefilter.pl
