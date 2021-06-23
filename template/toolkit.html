@@ -444,7 +444,7 @@
 {{define "qingdaoWGS"}}
 {{template "header" .}}
 <div class="card-body container">
-<iframe src="http://192.168.3.4:9089/qingdaoWGS" id="fra" frameborder="0" scrolling="no" s/tyle="width:100vh; height:100vh"> </iframe>
+<iframe src="http://192.168.3.4:9089/qingdaoWGS" id="fra" frameborder="0" scrolling="no" style="width:100%; height:100vh"> </iframe>
 </div>
 <script>window.onload = function(){document.getElementById("fra").contentWindow.postMessage(document.getElementById("user").innerHTML,"*")}</script>
 {{template "footer" .}}
@@ -453,9 +453,9 @@
 {{define "drug_report"}}
 {{template "header" .}}
 <div class="card-body container">
-<iframe src="http://172.16.56.38:9089/" frameborder="0" scrolling="no" style="width:100vh; height:100vh"> 
-</iframe>
+<iframe src="http://172.16.56.38:9089/" id="fra" frameborder="0" scrolling="no" style="width:100%; height:100vh"> </iframe>
 </div>
+<script>window.onload = function(){document.getElementById("fra").contentWindow.postMessage(document.getElementById("user").innerHTML,"*")}</script>
 {{template "footer" .}}
 {{end}}
 
@@ -463,7 +463,7 @@
 {{define "thalassemia_report"}}
 {{template "header" .}}
 <div class="card-body container">
-<iframe src="" frameborder="0" scrolling="no" style="width:100vh; height:100vh"> </iframe>
+<iframe src="" id="fra" frameborder="0" scrolling="no" style="width:100%; height:100vh"> </iframe>
 </div>
 <script>window.onload = function(){document.getElementById("fra").contentWindow.postMessage(document.getElementById("user").innerHTML,"*")}</script>
 {{template "footer" .}}
@@ -472,7 +472,7 @@
 {{define "deaf_report"}}
 {{template "header" .}}
 <div class="card-body container">
-<iframe src="http://192.168.3.4:9089/uploadHearingLossReport" frameborder="0" scrolling="no" style="width:100vh; height:100vh"></iframe>
+<iframe src="http://192.168.3.4:9089/uploadHearingLossReport" id="fra" frameborder="0" scrolling="no" style="width:100%; height:100vh"></iframe>
 </div>
 <script>window.onload = function(){document.getElementById("fra").contentWindow.postMessage(document.getElementById("user").innerHTML,"*")}</script>
 {{template "footer" .}}
@@ -481,8 +481,7 @@
 {{define "changsha_deaf"}}
 {{template "header" .}}
 <div class="card-body container">
-<iframe src="http://10.178.4.71:9094/deafInfo" frameborder="0" scrolling="no" style="width:100vh; height:100vh"> 
-</iframe>
+<iframe src="http://10.178.4.71:9094/deafInfo" id="fra" frameborder="0" scrolling="no" style="width:100%; height:100vh"> </iframe>
 </div>
 {{template "footer" .}}
 {{end}}
@@ -490,16 +489,26 @@
 {{define "tianjin_deaf"}}
 {{template "header" .}}
 <div class="card-body container">
-<iframe src="http://192.168.136.114:8080/deafInfo" frameborder="0" scrolling="no" style="width:100vh; height:100vh"></iframe>
+<iframe src="http://192.168.136.114:8080/deafInfo" frameborder="0" scrolling="no" style="width:100%; height:100vh"></iframe>
 </div>
 <script>window.onload = function(){document.getElementById("fra").contentWindow.postMessage(document.getElementById("user").innerHTML,"*")}</script>
 {{template "footer" .}}
 {{end}}
 
+{{define "shenzhen_deaf"}}
+{{template "header" .}}
+<div class="card-body container">
+<iframe src="http://192.168.3.6:9094/deafInfo" frameborder="0" scrolling="no" style="width:100%; height:100vh"></iframe>
+</div>
+<script>window.onload = function(){document.getElementById("fra").contentWindow.postMessage(document.getElementById("user").innerHTML,"*")}</script>
+{{template "footer" .}}
+{{end}}
+
+
 {{define "shenzhen_thalassemia"}}
 {{template "header" .}}
 <div class="card-body container">
-<iframe src="http://192.168.3.6:9095/thaInfo" frameborder="0" scrolling="no" style="width:100vh; height:100vh"> </iframe>
+<iframe src="http://192.168.3.6:9095/thaInfo" frameborder="0" scrolling="no" style="width:100%; height:100vh"></iframe>
 </div>
 <script>window.onload = function(){document.getElementById("fra").contentWindow.postMessage(document.getElementById("user").innerHTML,"*")}</script>
 {{template "footer" .}}

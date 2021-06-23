@@ -272,6 +272,7 @@ func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Println(cmd)
 		simple_util.RunCmd(perl, cmd...)
+		t.ExecuteTemplate(w, "plotReadsLocal", Info)
 	} else {
 		r.ParseForm() //暂时不支持get参数
 		t.ExecuteTemplate(w, "plotReadsLocal", Info)
@@ -719,7 +720,6 @@ func phoenix(w http.ResponseWriter, r *http.Request) {
 		infoF, err := os.Create(infoPath)
 		simple_util.CheckErr(err)
 		_, err = fmt.Fprint(infoF, info)
-		log.Println(info)
 		simple_util.CheckErr(err)
 		simple_util.CheckErr(infoF.Close())
 	} else {
@@ -1055,6 +1055,26 @@ func tianjin_deaf(w http.ResponseWriter, r *http.Request) {
         } else {
                 t.ExecuteTemplate(w, "tianjin_deaf", Info)
         }
+}
+func shenzhen_deaf(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "深圳耳聋信息分析"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["shenzhen_deaf"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		//new function
+	} else {
+		t.ExecuteTemplate(w, "shenzhen_deaf", Info)
+	}
 }
 
 func shenzhen_thalassemia(w http.ResponseWriter, r *http.Request) {

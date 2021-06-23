@@ -13,7 +13,7 @@ my $is_trio=shift || "null";
 print "$qc\n";
 $here=`readlink -e $here`;chomp $here;
 open IN, "<$list" or die "cannot open list:$!\n";
-open JOB_LOG, ">$here/job.log" or die "cannot oputput list:$!\n";
+#open JOB_LOG, ">$here/job.log" or die "cannot oputput list:$!\n";
 open RUN,  ">$here/run.new.sh" or die "cannot output $here/run.new.sh\n";
 #my %family=();
 #my %gender=();
@@ -46,6 +46,7 @@ while (<IN>){  # each \n\n
 }
 close RUN;
 chdir "$here";
+#system("sh run.new.sh &");
 my $qsub=`qsub -cwd -l vf=15g,num_proc=1 -P B2C_SGD -q bc_b2c.q -terse run.new.sh`;chomp $qsub;
 print JOB_LOG "$qsub\t$here\n";
 my $time_string=`date '+%Y-%m-%d %H:%M:%S'`; chomp $time_string; my $line= "$time_string $0"; 

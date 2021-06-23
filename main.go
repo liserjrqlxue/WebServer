@@ -47,6 +47,7 @@ func main() {
 	http.HandleFunc("/deaf_report",deaf_report)
 	http.HandleFunc("/changsha_deaf",changsha_deaf)
 	http.HandleFunc("/tianjin_deaf",tianjin_deaf)
+	http.HandleFunc("/shenzhen_deaf",shenzhen_deaf)
 	http.HandleFunc("/shenzhen_thalassemia",shenzhen_thalassemia)
 	http.HandleFunc("/Nifty3",Nifty3)
 
@@ -67,17 +68,18 @@ func main() {
 	Permission["Manual_Trio"] = "wes"
 	Permission["phoenix"] = ""
 	Permission["kinship"] = "wes"
-	Permission["vcfanno"] = "wes,wgs"
+	Permission["vcfanno"] = ""
 	Permission["WGSlargeCNV"] = "wgs"
 	Permission["triploid"] = ""
 	Permission["contamination"] = ""
-	Permission["qingdaoWGS"] = ""
+	Permission["qingdaoWGS"] = "wgs"
 	Permission["drug_report"] = ""
 	Permission["thalassemia_report"] = ""
 	Permission["deaf_report"] = ""
-	Permission["changsha_deaf"] = ""
-	Permission["tianjin_deaf"] = ""
-	Permission["shenzhen_thalassemia"] = ""
+	Permission["changsha_deaf"] = "changsha_deaf"
+	Permission["tianjin_deaf"] = "tianjin_deaf"
+	Permission["shenzhen_deaf"] = "shenzhen_deaf"
+	Permission["shenzhen_thalassemia"] = "shenzhen_thalassemia"
 	Permission["Nifty3"] = ""
 	
 
