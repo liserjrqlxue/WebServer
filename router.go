@@ -231,6 +231,38 @@ func login(w http.ResponseWriter, r *http.Request) {
 	
 }
 
+func change_password(w http.ResponseWriter, r *http.Request) {
+	log.Println("method:", r.Method)
+	var Info Infos
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html",templatePath+"login.html")
+	simple_util.CheckErr(err)
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		username := r.FormValue("username")
+		password := r.FormValue("password")
+		new_password := r.FormValue("new_password")
+		params := []string{
+			"src/login.py",
+			"-m", "change_password",
+			"-u", username,
+			"-p", password,
+			"-np",new_password,
+			}
+		log.Println(params)
+		out,err := exec.Command("python3", params...).Output()
+		if string(out) == "Y" && err == nil{
+			fmt.Fprintf(w, "<script>alert('密码修改成功');window.location.href = '/';</script>")
+		}else{
+			Info.Message = "账号密码错误"
+			t.ExecuteTemplate(w, "change_password", Info)
+		}
+	}else{
+		r.ParseForm()
+		t.ExecuteTemplate(w, "change_password", Info)
+	}
+}
+
 var perl = "/home/liuqiang1/USR/soft/bin/perl"
 
 func plotReadsLocal(w http.ResponseWriter, r *http.Request) {

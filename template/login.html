@@ -20,14 +20,14 @@
 		</div>
 		<td colspan="2">
                 <input class="btn btn-primary col-sm-5" type="submit" value="登录"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <input class="btn btn-primary col-sm-5" type="reset" value="修改密码"/>
+                <input class="btn btn-primary col-sm-5" onclick='location.href=("/change_password")' type="reset" value="修改密码"/>
 		</td>
 </form>
 {{end}}
 
 {{define "change_password"}}
 {{template "header" .}}
-<h3 style="text-align: center">用户登录</h3>
+<h3 style="text-align: center">用户修改密码</h3>
 <div align="center"><p style="color:red">{{.Message}}</p></div>
 <form class="container" action="/change_password" method="post" >
     <table class="container col-sm-5" border="1" cellpadding="10" style="margin: 0px auto">
@@ -41,7 +41,7 @@
         </tr>
 		<tr>
             <td align="center">新密码</td>
-            <td><input class="col-sm-12" type="password" name="password"/></td>
+            <td><input class="col-sm-12" type="password" name="new_password"/></td>
         </tr>
         <tr align="center">
             <td colspan="2">

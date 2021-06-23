@@ -497,7 +497,7 @@
 
 {{define "shenzhen_deaf"}}
 {{template "header" .}}
-<div class="card-body container">
+<div>
 <iframe src="http://192.168.3.6:9094/deafInfo" frameborder="0" scrolling="no" style="width:100%; height:100vh"></iframe>
 </div>
 <script>window.onload = function(){document.getElementById("fra").contentWindow.postMessage(document.getElementById("user").innerHTML,"*")}</script>
@@ -507,7 +507,7 @@
 
 {{define "shenzhen_thalassemia"}}
 {{template "header" .}}
-<div class="card-body container">
+<div>
 <iframe src="http://192.168.3.6:9095/thaInfo" frameborder="0" scrolling="no" style="width:100%; height:100vh"></iframe>
 </div>
 <script>window.onload = function(){document.getElementById("fra").contentWindow.postMessage(document.getElementById("user").innerHTML,"*")}</script>
