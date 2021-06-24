@@ -452,10 +452,28 @@
 
 {{define "drug_report"}}
 {{template "header" .}}
-<div class="card-body container">
-<iframe src="http://172.16.56.38:9089/" id="fra" frameborder="0" scrolling="no" style="width:100%; height:100vh"> </iframe>
+<div class="">
+<ul class="nav nav-tabs" id="myTab" role="tablist">
+  <li class="nav-item">
+    <a class="nav-link active" id="info-tab" data-toggle="tab" href="#info" role="tab" aria-controls="info" aria-selected="true">天津药物录入</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" id="report-tab" data-toggle="tab" href="#report" role="tab" aria-controls="report" aria-selected="false">天津药物报告</a>
+  </li>
+</ul>
+<div class="tab-content" id="myTabContent">
+<div class="tab-pane fade show active" id="info" role="tabpanel" aria-labelledby="info-tab">
+
+	<iframe src="http://172.16.56.38:9089/" id="fra" frameborder="0" scrolling="no" style="width:100%; height:100vh"> </iframe>
 </div>
-<script>window.onload = function(){document.getElementById("fra").contentWindow.postMessage(document.getElementById("user").innerHTML,"*")}</script>
+<div class="tab-pane fade" id="Search" role="tabpanel" aria-labelledby="Search-tab">
+	<iframe src="http://192.168.136.113:9089/" id="fra" frameborder="0" scrolling="no" style="width:100%; height:100vh"> </iframe>
+</div>
+</div>
+<script>
+var type = location.href.split('?')[1];
+$('#mytab a[href="#'+ type + '"]').tab('show')
+</script>
 {{template "footer" .}}
 {{end}}
 
