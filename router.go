@@ -3,7 +3,6 @@ package main
 import (
 	"archive/zip"
 	"crypto/md5"
-	"encoding/json"
 	"fmt"
 	"github.com/liserjrqlxue/simple-util"
 	"html/template"
@@ -12,7 +11,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -41,6 +39,8 @@ type Infos struct {
 	Err     string
 	Message string
 	Href    string
+	User    string
+	Permission string
 }
 
 func md5sum(str string) string {
@@ -53,6 +53,53 @@ func md5sum(str string) string {
 func createToken() string {
 	// token
 	return md5sum(strconv.FormatInt(time.Now().Unix(), 10))
+}
+func getUser(r *http.Request) (string,string){
+	params := []string{
+		"src/login.py",
+		"-m", "check_login",
+		"-ip", r.RemoteAddr,
+	}
+	out,err := exec.Command("python3", params...).Output()
+	if string(out) != "N" && err == nil{
+		username := strings.Split(string(out),"\t")[0]
+		permission := strings.Split(string(out),"\t")[1]
+		return username,permission
+	}else{
+		return "未登录",""
+	}
+}
+
+func func_permission_check(Function_permission string , User_permission string) bool{
+	if Function_permission == "" {
+		return true
+	}
+	for _,f := range strings.Split(Function_permission,",") {
+		for _,j := range strings.Split(User_permission,",") {
+			if f == j {
+			return true
+			}
+		}
+	}
+	return false
+}
+
+func get_permission(r *http.Request, function_name string) bool{
+	params := []string{
+		"src/login.py",
+		"-m", "permission_check",
+		"-ip", r.RemoteAddr,
+		"-func", function_name,
+	}
+	if function_name == ""{
+		return true
+	}
+	out,err := exec.Command("python3", params...).Output()
+	if string(out) == "Y" && err == nil{
+		return true
+	}else{
+		return false
+	}
 }
 
 // ZipFiles compresses one or many files into a single zip archive file
@@ -104,132 +151,6 @@ func ZipFiles(filename string, files []string) error {
 	}
 	return nil
 }
-
-var typeMap = map[string]string{
-	"hw":            "report.py/pre_pregnancy/auto_report_hw.py",
-	"wgs":           "report.py/pre_pregnancy/auto_report_wgs.py",
-	"pre_pregnancy": "report.py/pre_pregnancy/auto_report.py",
-	"multi_center":  "report.py/pre_pregnancy/auto_report_dzx.py",
-}
-
-func reportErr(err error, w http.ResponseWriter, t *template.Template, info Infos) bool {
-	if err != nil {
-		log.Println(err)
-		info.Err = fmt.Sprint(err)
-		t.Execute(w, info)
-		return true
-	}
-	return false
-}
-
-// 处理/autoReport 逻辑
-func autoReport(w http.ResponseWriter, r *http.Request) {
-	var info Infos
-	info.Token = createToken()
-
-	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html", templatePath+"autoReport.html")
-	if reportErr(err, w, t, info) {
-		return
-	}
-	log.Println("method:", r.Method) //获取请求的方法
-
-	if r.Method == "POST" {
-		r.ParseMultipartForm(32 << 20)
-		logRequest(r)
-		info.Option = r.FormValue("type")
-		info.Token = r.FormValue("token")
-
-		file, handler, err := r.FormFile("uploadfile")
-		if reportErr(err, w, t, info) {
-			return
-		}
-		defer simple_util.DeferClose(file)
-
-		info.Token = r.FormValue("token")
-		reportFile := typeMap[info.Option]
-		inputDir := path.Join("public", info.Option, "input")
-		outputDir := path.Join("public", info.Option, "output")
-		err = os.MkdirAll(inputDir, 0755)
-		if reportErr(err, w, t, info) {
-			return
-		}
-		err = os.MkdirAll(outputDir, 0755)
-		if reportErr(err, w, t, info) {
-			return
-		}
-
-		//fmt.Fprintf(w, "%v", handler.Header)
-		uploadFileName := handler.Filename
-		suffix := filepath.Ext(uploadFileName)
-		filename := strings.TrimRight(uploadFileName, suffix)
-		newName := md5sum(filename)
-		saveFileName := path.Join(inputDir, newName+suffix)
-		if _, err := os.Stat(saveFileName); err == nil {
-			log.Println(saveFileName + "已存在，删除")
-			err = os.Remove(saveFileName)
-			if reportErr(err, w, t, info) {
-				return
-			}
-		}
-		f, err := os.OpenFile(saveFileName, os.O_WRONLY|os.O_CREATE, 0666)
-		if reportErr(err, w, t, info) {
-			return
-		}
-
-		defer f.Close()
-		io.Copy(f, file)
-		cmd := exec.Command("python3", reportFile, "--data-file", saveFileName, "--out-dir", outputDir)
-		out, err := cmd.CombinedOutput()
-		info.Message = fmt.Sprintf("%s\n", out)
-		if reportErr(err, w, t, info) {
-			return
-		}
-		info.Message = info.Message + "create report done\n"
-
-		outs := strings.Split(string(out), "\n")
-		var files []string
-		sampleNum := "NA"
-		reportNum := "NA"
-		p1 := `number of samples (\d+)`
-		p2 := `number of reports (\d+)`
-		ph := `final.result-`
-		pe := `_BB.*`
-		reg1 := regexp.MustCompile(p1)
-		reg2 := regexp.MustCompile(p2)
-		regh := regexp.MustCompile(ph)
-		rege := regexp.MustCompile(pe)
-		filename = regh.ReplaceAllString(filename, "")
-		filename = rege.ReplaceAllString(filename, "_BB")
-		for i := range outs {
-			log.Println(outs[i])
-			match1 := reg1.FindStringSubmatch(outs[i])
-			match2 := reg2.FindStringSubmatch(outs[i])
-			if match1 != nil {
-				sampleNum = match1[1]
-			}
-			if match2 != nil {
-				reportNum = match2[1]
-			}
-			if strings.HasSuffix(outs[i], "docx") || strings.HasSuffix(outs[i], "zip") || strings.HasSuffix(outs[i], "xlsx") {
-				files = append(files, path.Join(outputDir, filepath.Base(outs[i])))
-			}
-		}
-		output := "报告-" + filename + "-" + time.Now().Format("20060102") + "-" + sampleNum + "_" + reportNum + ".zip"
-		err = ZipFiles(path.Join(outputDir, output), files)
-		if err != nil {
-			info.Message = info.Message + "<p>zip file fail!</p>"
-			reportErr(err, w, t, info)
-			return
-		}
-		info.Href = path.Join(outputDir, output)
-		info.Message = info.Message + output
-	} else {
-		r.ParseForm()
-		info.Option = r.FormValue("type")
-	}
-	t.ExecuteTemplate(w, "autoReport", info)
-}
-
 func sayhelloName(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm() //解析url传递的参数，对于POST则解析响应包的主体（request body）
 	//注意:如果没有调用ParseForm方法，下面无法获取表单的数据
@@ -241,17 +162,25 @@ func sayhelloName(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("key:", k)
 		fmt.Println("val:", strings.Join(v, ""))
 	}
-	//fmt.Fprintf(w, "Hello World!") //这个写入到w的是输出到客户端的
+	//fmt.Fprintf(w, "<script>alert('good')</script>") //这个写入到w的是输出到客户端的
 	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html", templatePath+"index.html")
 	if err != nil {
 		fmt.Fprint(w, err)
 		return
 	}
-
 	var Info Infos
+	UPer := ""
 	Info.Title = "Home Page"
 	Info.Token = createToken()
-	t.ExecuteTemplate(w, "index", Info)
+	Info.User,UPer = getUser(r)
+	function_list := []string{}
+	for function := range Permission{
+		if func_permission_check(Permission[function],UPer){
+			function_list = append(function_list,function)
+		}
+	}
+	Info.Permission=strings.Join(function_list, ",")
+    t.ExecuteTemplate(w, "index", Info)
 }
 
 func logRequest(r *http.Request) {
@@ -269,151 +198,124 @@ func logRequest(r *http.Request) {
 	}
 }
 
+
 func login(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()                    //解析url传递的参数，对于POST则解析响应包的主体（request body）
-	fmt.Println("method:", r.Method) //获取请求的方法
-	if r.Method == "GET" {
-		t, _ := template.ParseFiles("template/login.gtpl")
-		log.Println(t.Execute(w, nil))
-	} else {
-		//请求的是登录数据，那么执行登录的逻辑判断
-		fmt.Println("username:", r.Form["username"])
-		fmt.Println("password:", r.Form["password"])
+	log.Println("method:", r.Method)
+	var Info Infos
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html",templatePath+"login.html")
+	simple_util.CheckErr(err)
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		username := r.FormValue("username")
+		password := r.FormValue("password")
+		ip := r.RemoteAddr
+		params := []string{
+			"src/login.py",
+			"-m", "login",
+			"-u", username,
+			"-p", password,
+			"-ip", ip,
+			}
+		out,err := exec.Command("python3", params...).Output()
+		if string(out) == "Y" && err == nil{
+			fmt.Fprintf(w, "<script>alert('登陆成功');window.location.href = '/';</script>")
+		}else{
+			Info.Message = "账号密码错误"
+			t.ExecuteTemplate(w, "login", Info)
+		}
+	}else {
+		r.ParseForm()
+		t.ExecuteTemplate(w, "login", Info)
+	}
+	
+}
+
+func change_password(w http.ResponseWriter, r *http.Request) {
+	log.Println("method:", r.Method)
+	var Info Infos
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html",templatePath+"login.html")
+	simple_util.CheckErr(err)
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		username := r.FormValue("username")
+		password := r.FormValue("password")
+		new_password := r.FormValue("new_password")
+		params := []string{
+			"src/login.py",
+			"-m", "change_password",
+			"-u", username,
+			"-p", password,
+			"-np",new_password,
+			}
+		log.Println(params)
+		out,err := exec.Command("python3", params...).Output()
+		if string(out) == "Y" && err == nil{
+			fmt.Fprintf(w, "<script>alert('密码修改成功');window.location.href = '/';</script>")
+		}else{
+			Info.Message = "账号密码错误"
+			t.ExecuteTemplate(w, "change_password", Info)
+		}
+	}else{
+		r.ParseForm()
+		t.ExecuteTemplate(w, "change_password", Info)
 	}
 }
 
-var plotReadsLocalDir = "public" + pSep + "plotReadsLocal"
-var plotScript = "src" + pSep + "plotreads.sz.pl"
-
-var perl = "/share/backup/wangyaoshen/perl5/perlbrew/perls/perl-5.26.2/bin/perl"
+var perl = "/home/liuqiang1/USR/soft/bin/perl"
 
 func plotReadsLocal(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html", templatePath+"plotReadsLocal.html")
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html", templatePath+"toolkit.html")
 	simple_util.CheckErr(err)
-
 	var Info Infos
 	Info.Title = "本地集群画reads图"
 	Info.Token = createToken()
-
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["plotReadsLocal"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
 	log.Println("method:", r.Method)
 	if r.Method == "POST" {
 		r.ParseMultipartForm(32 << 20)
 		logRequest(r)
-
 		prefix := r.FormValue("prefix")
-
 		if r.Form["position"][0] != "at" && len(r.Form["End"]) > 0 {
 			r.Form["Start"][0] = r.Form["Start"][0] + r.Form["position"][0] + r.Form["End"][0]
 		}
-
 		y, m, _ := time.Now().Date()
 		tag := fmt.Sprintf("%d-%v", y, m)
-		err := os.MkdirAll(plotReadsLocalDir+pSep+tag, 0755)
+		err := os.MkdirAll("public" + pSep + "plotReadsLocal" + pSep + tag, 0755)
 		simple_util.CheckErr(err)
-
 		pngPrefix := prefix + "_" + Info.Token
 		pngSuffix := "_" + r.Form["chr"][0] + "_" + r.Form["Start"][0] + ".png"
 		pngName := pngPrefix + pngSuffix
 		Info.Src = tag + "/" + pngName
 		Info.Img = pngName
 		var cmd = []string{
-			plotScript,
+			"src" + pSep + "plotreads.sz.pl",
 			"-Rs", "/ifs9/BC_B2C_01A/B2C_SGD/SOFTWARES/bin/Rscript",
 			"-b", r.Form["path"][0],
 			"-c", r.Form["chr"][0],
 			"-p", r.Form["Start"][0], "-r",
-			"-prefix", plotReadsLocalDir + pSep + tag + pSep + pngPrefix,
+			"-prefix", "public" + pSep + "plotReadsLocal" + pSep + tag + pSep + pngPrefix,
 			"-f", "20", "-d", "-a", "-l", r.Form["Plotread_Length"][0],
 		}
-		log.Println(perl, cmd)
+		log.Println(cmd)
 		simple_util.RunCmd(perl, cmd...)
+		t.ExecuteTemplate(w, "plotReadsLocal", Info)
 	} else {
-		r.ParseForm()
-		logRequest(r)
-	}
-	t.ExecuteTemplate(w, "plotReadsLocal", Info)
-}
-
-type PlotInfo struct {
-	SampleID string   `json:"sample_name"`
-	Bam      string   `json:"bam_path"`
-	Variants []string `json:"variants"`
-}
-
-func plotMultiReadsLocal(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html", templatePath+"plotMultiReadsLocal.html")
-	simple_util.CheckErr(err)
-
-	var Info Infos
-	Info.Title = "本地集群画reads图"
-	Info.Token = createToken()
-
-	log.Println("method:", r.Method)
-	if r.Method == "POST" {
-		y, m, _ := time.Now().Date()
-		tag := fmt.Sprintf("%d-%v", y, m)
-		var plotInfo PlotInfo
-		decoder := json.NewDecoder(r.Body)
-		decoder.Decode(&plotInfo)
-		sampleID := plotInfo.SampleID
-		bam := plotInfo.Bam
-		variants := plotInfo.Variants
-		pngPrefix := sampleID + "_" + Info.Token
-		var varUrl []string
-		for _, variant := range variants {
-			item := strings.Split(variant, "-")
-			if len(item) < 3 {
-				varUrl = append(varUrl, "error!")
-				fmt.Fprintf(w, "<h1>ERROR:<h1>\n<p>variant:%s can not parser!</p>\n", variant)
-			} else {
-				chr := item[0]
-				start := item[1]
-				stop := item[2]
-				position := start
-				if len(item) >= 5 {
-					ref := item[3]
-					alt := item[4]
-					p1, err1 := strconv.Atoi(start)
-					p2, err2 := strconv.Atoi(stop)
-					if err1 == nil && err2 == nil {
-						if p2-p1 == 1 && len(ref) == 1 && len(alt) == 1 {
-						} else if ref == "." || len(alt) > 1 {
-							position = start + "in" + stop
-						} else {
-							position = start + "to" + stop
-						}
-					}
-				}
-				pngSuffix := "_" + chr + "_" + position + ".png"
-				varUrl = append(varUrl, pngPrefix+pngSuffix)
-				var cmd = []string{
-					plotScript,
-					"-Rs", "/ifs9/BC_B2C_01A/B2C_SGD/SOFTWARES/bin/Rscript",
-					"-b", bam,
-					"-c", chr,
-					"-p", position, "-r",
-					"-prefix", plotReadsLocalDir + pSep + tag + pSep + pngPrefix,
-					"-f", "20", "-d", "-a", "-l", "100",
-				}
-				log.Println(perl, cmd)
-				simple_util.RunCmd(perl, cmd...)
-				fmt.Fprintf(w, "<p>%s</p>\n<img src=\"%s\">%s</img>\n", pngPrefix+pngSuffix, tag+"/"+pngPrefix+pngSuffix, tag+"/"+pngPrefix+pngSuffix)
-			}
-		}
-	} else {
-		r.ParseForm()
-		logRequest(r)
-		t.ExecuteTemplate(w, "plotMultiReadsLocal", Info)
+		r.ParseForm() //暂时不支持get参数
+		t.ExecuteTemplate(w, "plotReadsLocal", Info)
 	}
 }
 
 func upload(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("method:", r.Method)
-
 	var Info Infos
 	Info.Title = "上传文件"
 	Info.Token = createToken()
-
 	if r.Method == "GET" {
 		t, err := template.ParseFiles(templatePath + "upload.html")
 		simple_util.CheckErr(err)
@@ -431,50 +333,21 @@ func upload(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func fixHemi(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("method:", r.Method)
-
-	var Info Infos
-	Info.Title = "Hemi修復"
-	Info.Token = createToken()
-
-	if r.Method == "POST" {
-		r.ParseMultipartForm(32 << 20)
-		file, handler, err := r.FormFile("uploadfile")
-		simple_util.CheckErr(err)
-		defer file.Close()
-		//fmt.Fprintf(w, "%v", handler.Header)
-		f, err := os.Create("public" + pSep + handler.Filename)
-		simple_util.CheckErr(err)
-		defer f.Close()
-		io.Copy(f, file)
-		cmd := []string{
-			"-input", "public" + pSep + handler.Filename,
-			"-gender", r.FormValue("gender"),
-			"-output", "public" + pSep + handler.Filename + "." + r.FormValue("gender") + ".xlsx",
-		}
-		simple_util.RunCmd(
-			exPath+pSep+"hemiFix.exe", cmd...,
-		)
-		Info.Href = "/public/" + handler.Filename + "." + r.FormValue("gender") + ".xlsx"
-		Info.Message = "Download"
-	}
-	t, err := template.ParseFiles(templatePath + "fixHemi.html")
-	simple_util.CheckErr(err)
-	t.Execute(w, Info)
-}
-
 func filterExcel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("method:", r.Method)
-	t, err := template.ParseFiles(templatePath + "filterExcel.html")
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
 	simple_util.CheckErr(err)
-
 	var Info Infos
 	Info.Title = "filter Excel"
 	Info.Token = createToken()
-
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["filterExcel"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
 	if r.Method == "POST" {
 		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
 		file, handler, err := r.FormFile("uploadfile")
 		if err != nil {
 			log.Println(err)
@@ -483,44 +356,181 @@ func filterExcel(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		defer file.Close()
-		//fmt.Fprintf(w, "%v", handler.Header)
-		f, err := os.Create("public" + pSep + handler.Filename)
+		f, err := os.Create("public" + pSep + "filter" + pSep + handler.Filename)
 		simple_util.CheckErr(err)
 		defer f.Close()
 		io.Copy(f, file)
 		cmd := []string{
-			"-input", "public" + pSep + handler.Filename,
-			"-gene", "gene.list",
-			"-output", "public" + pSep + handler.Filename + ".filter.xlsx",
+			filepath.Join(exPath,"src","genefilter.pl"),
+			"-i", "public" + pSep + "filter" + pSep + handler.Filename,
+			"-g", r.FormValue("gene"),
+			"-o", "public" + pSep + "filter" + pSep + handler.Filename + ".filter.xlsx",
 		}
-		log.Println(
-			simple_util.RunCmd(
-				exPath+pSep+"filterExcel", cmd...,
-			),
-		)
-		Info.Href = "/public/" + handler.Filename + ".filter.xlsx"
+		simple_util.RunCmd(perl, cmd...)
+		log.Println(cmd)
+		Info.Href = "/public/filter/" + handler.Filename + ".filter.xlsx"
 		Info.Message = "Download"
+	} else {
+		r.ParseForm() //暂时不支持get参数
+		t.ExecuteTemplate(w, "filterExcel", Info)
 	}
-	t.Execute(w, Info)
 }
-
-func plotExonCnv(w http.ResponseWriter, r *http.Request) {
+func filterKDNY(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("method:", r.Method)
-
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
 	var Info Infos
-	Info.Title = "exon cnv plot"
+	Info.Title = "filter KDNY"
 	Info.Token = createToken()
-
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["filterKDNY"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
 	if r.Method == "POST" {
 		r.ParseMultipartForm(32 << 20)
 		logRequest(r)
+		workdir := filepath.Join("public", "filter", Info.Token)
+		os.MkdirAll(workdir, 0755)
+		sample_list := sep.Split(r.FormValue("sample"),-1)
+		for i := range sample_list {
+			cmd := []string{
+				"src/allgene.filter.sh",
+				sample_list[i],
+				"KDNY",
+				workdir,
+			}
+			log.Println(cmd)
+			simple_util.RunCmd("bash",cmd...)
+		}
+		Info.Href = "/public/filter/" + Info.Token
+		Info.Message = "Open Dir"
+	} else {
+		r.ParseForm() //暂时不支持get参数
+		t.ExecuteTemplate(w, "filterExcel", Info)
+	}
+}
 
+func filterInfertility(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "filter Infertility"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["filterInfertility"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		workdir := filepath.Join("public", "filter", Info.Token)
+		os.MkdirAll(workdir, 0755)
+		sample_list := sep.Split(r.FormValue("sample"),-1)
+		for i := range sample_list {
+			cmd := []string{
+				"src/allgene.filter.sh",
+				sample_list[i],
+				"Infertility",
+				workdir,
+			}
+			log.Println(cmd)
+			simple_util.RunCmd("bash",cmd...)
+		}
+		Info.Href = "/public/filter/" + Info.Token
+		Info.Message = "Open Dir"
+	} else {
+		r.ParseForm() //暂时不支持get参数
+		t.ExecuteTemplate(w, "filterExcel", Info)
+	}
+}
+
+func BamExtractor(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "Bam Extractor"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["BamExtractor"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		workdir := filepath.Join("public", "filter", Info.Token)
+		os.MkdirAll(workdir, 0755)
+		cmd := []string{
+			"src/Bam_Extractor.sh",
+			r.FormValue("sample"),
+			r.FormValue("position"),
+			workdir,
+		}
+		simple_util.RunCmd("bash",cmd...)
+		log.Println(cmd)
+		Info.Href = "/public/filter/" + Info.Token
+		Info.Message = "Open Dir"
+	} else {
+		r.ParseForm() //暂时不支持get参数
+		t.ExecuteTemplate(w, "BamExtractor", Info)
+	}
+}
+
+func ExomeDepthplot(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "ExomeDepth plot"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["ExomeDepthplot"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		cmd := []string{
+			"src/ExomeDepth_plot.sh",
+			r.FormValue("sample"),
+			r.FormValue("gene"),
+			r.Form["chr"][0],
+			Info.Token,
+		}
+		simple_util.RunCmd("bash",cmd...)
+		log.Println(cmd)
+		Info.Href = "/public/ExomeDepth/" + Info.Token +".pdf"
+		Info.Message = "Open plot"
+	} else {
+		r.ParseForm() //暂时不支持get参数
+		t.ExecuteTemplate(w, "ExomeDepthplot", Info)
+	}
+}
+
+func plotExonCOV(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "exon coverage plot"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["plotExonCOV"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20) //分配获取信息内存
+		logRequest(r)
 		y, m, _ := time.Now().Date()
 		tag := fmt.Sprintf("%d-%v", y, m)
-
 		workdir := filepath.Join("public", "exome_cnv", tag, Info.Token)
 		os.MkdirAll(workdir, 0755)
-
 		info := r.FormValue("info")
 		infoPath := filepath.Join(workdir, "info")
 		infoF, err := os.Create(infoPath)
@@ -528,80 +538,127 @@ func plotExonCnv(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(infoF, info)
 		fmt.Print(info)
 		simple_util.CheckErr(infoF.Close())
-		err = simple_util.RunCmd(perl, filepath.Join("src", "gen_script_exon_CNV.pl"), infoPath, filepath.Join(exPath, workdir))
-		if err != nil {
-			fmt.Fprintln(w, "CMD:", perl, filepath.Join("src", "gen_script_exon_CNV.pl"), infoPath, filepath.Join(exPath, workdir))
-			fmt.Fprintf(w, "Error:\n\t%+v\n", err)
-			log.Println(err)
-		} else {
-			http.Redirect(w, r, strings.Join([]string{"public", "exome_cnv", tag, Info.Token}, "/"), http.StatusSeeOther)
+		cmd := []string{
+			filepath.Join("src", "gen_script_exon_CNV.pl"), infoPath, filepath.Join(exPath, workdir),
 		}
-	} else {
-		t, err := template.ParseFiles(templatePath + "plotExonCnv.html")
-		simple_util.CheckErr(err)
-		t.Execute(w, Info)
-	}
-}
-
-func genCNVkit(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("method:", r.Method)
-
-	var Info Infos
-	Info.Title = "CNVkit plot"
-	Info.Token = createToken()
-
-	script := filepath.Join("src", "gen_CNVkit_pic.pl")
-
-	if r.Method == "POST" {
-		r.ParseMultipartForm(32 << 20)
-		logRequest(r)
-
-		y, m, _ := time.Now().Date()
-		tag := fmt.Sprintf("%d-%v", y, m)
-
-		workdir := filepath.Join("public", "geneCNVkit", tag, Info.Token)
-		os.MkdirAll(workdir, 0755)
-
-		info := r.FormValue("info")
-		infoPath := filepath.Join(workdir, "info")
-		infoF, err := os.Create(infoPath)
-		simple_util.CheckErr(err)
-		fmt.Fprint(infoF, info)
-		fmt.Print(info)
-		simple_util.CheckErr(infoF.Close())
-		err = simple_util.RunCmd(perl, script, infoPath, filepath.Join(exPath, workdir))
+		err = simple_util.RunCmd(perl, cmd...)
 		if err != nil {
-			fmt.Fprintln(w, "CMD:", perl, script, infoPath, filepath.Join(exPath, workdir))
-			fmt.Fprintf(w, "Error:\n\t%+v\n", err)
+			log.Println(cmd)
 			log.Println(err)
 		} else {
-			//http.Redirect(w, r, strings.Join([]string{"public", "genCNVkit", tag, Info.Token}, "/"), http.StatusSeeOther)
 			http.Redirect(w, r, workdir, http.StatusSeeOther)
 		}
 	} else {
-		t, err := template.ParseFiles(templatePath + "genCNVkit.html")
+		r.ParseForm() //暂时不支持get参数
+		t.ExecuteTemplate(w, "plotExonCOV", Info)
+	}
+}
+
+func plotCNVkit(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "CNVkit plot"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["plotCNVkit"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	script := filepath.Join("src", "gen_CNVkit_pic.pl")
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		y, m, _ := time.Now().Date()
+		tag := fmt.Sprintf("%d-%v", y, m)
+		workdir := filepath.Join("public", "geneCNVkit", tag, Info.Token)
+		os.MkdirAll(workdir, 0755)
+		info := r.FormValue("info")
+		infoPath := filepath.Join(workdir, "info")
+		infoF, err := os.Create(infoPath)
 		simple_util.CheckErr(err)
-		t.Execute(w, Info)
+		fmt.Fprint(infoF, info)
+		fmt.Print(info)
+		simple_util.CheckErr(infoF.Close())
+		cmd := []string{
+			script, infoPath, filepath.Join(exPath, workdir),
+		}
+		err = simple_util.RunCmd(perl, cmd...)
+		if err != nil {
+			log.Println(cmd)
+			log.Println(err)
+		} else {
+			http.Redirect(w, r, workdir, http.StatusSeeOther)
+		}
+	} else {
+		r.ParseForm() //暂时不支持get参数
+		t.ExecuteTemplate(w, "plotCNVkit", Info)
+	}
+}
+
+func WGSlargeCNV(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "WGSlargeCNV"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["WGSlargeCNV"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		workdir := filepath.Join("public", "WGS_plot", Info.Token)
+		os.MkdirAll(workdir, 0755)
+		info := r.FormValue("info")
+		infoPath := filepath.Join(workdir, "info")
+		infoF, err := os.Create(infoPath)
+		simple_util.CheckErr(err)
+		fmt.Fprint(infoF, info)
+		fmt.Print(info)
+		infoF.Close()
+		cmd := []string{
+			filepath.Join(exPath,"src","WGS_plot.sh"),
+			r.FormValue("wgspath"),
+			filepath.Join(workdir, "info"),
+			workdir,
+		}
+		err = simple_util.RunCmd("bash", cmd...)
+		if err != nil {
+			log.Println(cmd)
+			log.Println(err)		
+		} else {
+			http.Redirect(w, r, workdir, http.StatusSeeOther)
+		}
+	} else {
+		r.ParseForm() //暂时不支持get参数
+		t.ExecuteTemplate(w, "WGSlargeCNV", Info)
 	}
 }
 
 func WESanno(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("method:", r.Method)
-
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
 	var Info Infos
 	Info.Title = "WES annotation"
 	Info.Token = createToken()
-
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["WESanno"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
 	if r.Method == "POST" {
 		simple_util.CheckErr(r.ParseMultipartForm(32 << 20))
 		logRequest(r)
-
 		y, m, _ := time.Now().Date()
 		tag := fmt.Sprintf("%d-%v", y, m)
-
 		workdir := filepath.Join("public", "wes_anno", tag, Info.Token)
 		simple_util.CheckErr(os.MkdirAll(workdir, 0755))
-
 		info := r.FormValue("info")
 		sampleID := r.FormValue("sampleID")
 		infoPath := filepath.Join(workdir, "HGMD")
@@ -611,59 +668,506 @@ func WESanno(w http.ResponseWriter, r *http.Request) {
 		simple_util.CheckErr(err)
 		fmt.Print(info)
 		simple_util.CheckErr(infoF.Close())
-		log.Printf("RunCmd:[%s] [%s] [%s] [%s]", "bash", filepath.Join("src", "wes_anno.sh"), infoPath, sampleID)
-		err = simple_util.RunCmd("bash", filepath.Join("src", "wes_anno.sh"), infoPath, sampleID)
-		if err != nil {
-			fmt.Fprintln(w, "CMD:", "bash", filepath.Join("src", "wes_anno.sh"), infoPath, sampleID)
-			fmt.Fprintf(w, "Error:\n\t%+v\n", err)
-			log.Println(err)
-		} else {
-			http.Redirect(w, r, filepath.Join("public", "wes_anno", tag, Info.Token), http.StatusSeeOther)
+		cmd := []string{
+			filepath.Join("src", "wes_anno.sh"), infoPath, sampleID,
 		}
-	} else {
-		t, err := template.ParseFiles(templatePath + "WESanno.html")
-		simple_util.CheckErr(err)
-		simple_util.CheckErr(t.Execute(w, Info))
-	}
-}
-
-func plotCNVkit(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("method:", r.Method)
-
-	var Info Infos
-	Info.Title = "plot CNVkit"
-	Info.Token = createToken()
-
-	if r.Method == "POST" {
-		r.ParseMultipartForm(32 << 20)
-		logRequest(r)
-
-		script := filepath.Join("src", "run_CNVkit_plot.sh")
-
-		y, m, _ := time.Now().Date()
-		tag := fmt.Sprintf("%d-%v", y, m)
-
-		workdir := filepath.Join("public", "CNVkit", tag, Info.Token)
-		os.MkdirAll(workdir, 0755)
-
-		workDir := r.FormValue("workdir")
-		sampleID := r.FormValue("sampleID")
-		region := r.FormValue("region")
-		regions := sep.Split(region, -1)
-		var args = append([]string{script, sampleID, workDir, workdir}, regions...)
-
-		err := simple_util.RunCmd("bash", args...)
+		err = simple_util.RunCmd("bash", cmd...)
 		if err != nil {
-			fmt.Fprintln(w, "CMD:", "bash", args)
-			fmt.Fprintf(w, "Error:\n\t%+v\n", err)
-			log.Println(err)
+			log.Println(cmd)
+			log.Println(err)		
 		} else {
-			//http.Redirect(w, r, strings.Join([]string{"public", "CNVkit", tag, Info.Token}, "/"), http.StatusSeeOther)
 			http.Redirect(w, r, workdir, http.StatusSeeOther)
 		}
 	} else {
-		t, err := template.ParseFiles(templatePath + "plotCNVkit.html")
-		simple_util.CheckErr(err)
-		t.Execute(w, Info)
+		r.ParseForm() //暂时不支持get参数
+		t.ExecuteTemplate(w, "WESanno", Info)
 	}
 }
+
+
+func vcfanno(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "vcfanno"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["vcfanno"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		workdir := filepath.Join("public", "vcfanno", Info.Token)
+		os.MkdirAll(workdir, 0755)
+		file, handler, err := r.FormFile("uploadfile")
+		if err != nil {
+			log.Println(err)
+			Info.Err = err.Error()
+			t.Execute(w, Info)
+			return
+		}
+		defer file.Close()
+		f, err := os.Create(workdir + pSep + handler.Filename)
+		simple_util.CheckErr(err)
+		defer f.Close()
+		io.Copy(f, file)
+		cmd := []string{
+			filepath.Join(exPath,"src","vcfanno.sh"),
+			workdir + pSep + handler.Filename,
+			r.FormValue("gender"),
+		}
+		err = simple_util.RunCmd("bash", cmd...)
+		if err != nil {
+			log.Println(cmd)
+			log.Println(err)
+		} else {
+	           http.Redirect(w, r, workdir, http.StatusSeeOther)
+		}
+	} else {
+		r.ParseForm() //暂时不支持get参数
+		t.ExecuteTemplate(w, "vcfanno", Info)
+	}
+}
+
+func phoenix(w http.ResponseWriter, r *http.Request) {
+	var Info Infos
+	Info.Title = "phoenix"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["phoenix"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		//simple_util.CheckErr(r.ParseMultipartForm(32 << 20))
+		logRequest(r)
+		workdir := filepath.Join("public", "phoenix")
+		//simple_util.CheckErr(os.MkdirAll(workdir, 0755))
+		info := r.FormValue("info")
+		chip := r.FormValue("chip")
+		infoPath := filepath.Join(workdir, chip)
+		infoF, err := os.Create(infoPath)
+		simple_util.CheckErr(err)
+		_, err = fmt.Fprint(infoF, info)
+		simple_util.CheckErr(err)
+		simple_util.CheckErr(infoF.Close())
+	} else {
+		r.ParseForm() //暂时不支持get参数
+	}
+}
+
+
+func findfile(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "Findfile"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["findfile"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		y, m, _ := time.Now().Date()
+		tag := fmt.Sprintf("%d-%v", y, m)
+		workdir := filepath.Join("public", "findfile", tag, Info.Token)
+		os.MkdirAll(workdir, 0755)
+		info := r.FormValue("info")
+		infoPath := filepath.Join(workdir, "info")
+		qc := r.Form["QC"][0]
+		filetype := strings.Join(r.Form["filetype"],",")
+		infoF, err := os.Create(infoPath)
+		simple_util.CheckErr(err)
+		fmt.Fprint(infoF, info)
+		fmt.Print(info,"\n")
+		simple_util.CheckErr(infoF.Close())
+		script := filepath.Join("src", "findfile.pl")
+		var cmd = []string{
+			script,
+			"-list", infoPath,
+			"-target", filepath.Join(exPath, workdir),
+			"-QC", qc,
+			"-filetype", filetype,
+		}
+		err = simple_util.RunCmd(perl, cmd...)
+		if err != nil {
+			log.Println(cmd)
+			log.Println(err)
+		} else {
+	           http.Redirect(w, r, workdir, http.StatusSeeOther)
+		}
+	} else {
+		t.ExecuteTemplate(w, "findfile", Info)
+	}
+}
+
+func Manual_Trio(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "Manual_Trio"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["Manual_Trio"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		simple_util.CheckErr(r.ParseMultipartForm(32 << 20))
+		logRequest(r)
+		y, m, _ := time.Now().Date()
+		tag := fmt.Sprintf("%d-%v", y, m)
+		workdir := filepath.Join("public", "Manual_Trio", tag, Info.Token)
+		simple_util.CheckErr(os.MkdirAll(workdir, 0755))
+		sampleID := r.FormValue("sampleID")
+		info := r.FormValue("info")
+		Q20 := r.FormValue("Q20")
+		Q30 := r.FormValue("Q30")
+		DEPTH := r.FormValue("DEPTH")
+		COV20 := r.FormValue("COV20")
+		QC := Q20 + "," + Q30 + "," + DEPTH + "," + COV20
+		sample_Path := filepath.Join(workdir, "sampleID")
+		infoF, err := os.Create(sample_Path)
+		simple_util.CheckErr(err)
+		_, err = fmt.Fprint(infoF, sampleID)  //往sample_Path里面写sampleID
+		simple_util.CheckErr(err)
+		fmt.Print(info)
+		simple_util.CheckErr(infoF.Close())
+		log.Printf("RunCmd:[%s] [%s] [%s] [%s] [%s]", perl, filepath.Join("src", "trio_family_manual_xgentic.pl"),sample_Path, filepath.Join(exPath, workdir),QC,info )
+		var cmd = []string{
+			filepath.Join("src", "trio_family_manual_xgentic.pl"), sample_Path, filepath.Join(exPath, workdir),QC,info,}
+		err = simple_util.RunCmd(perl , cmd...)
+		if err != nil {
+			log.Println(cmd)
+			log.Println(err)
+		} else {
+			http.Redirect(w, r, filepath.Join("public", "Manual_Trio", tag, Info.Token), http.StatusSeeOther)  //"public", "Manual_Trio"都是指向工作目录的
+		}
+	} else {
+		t.ExecuteTemplate(w, "Manual_Trio", Info)
+	}
+}
+
+func kinship(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "Kinship"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["kinship"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		workdir := filepath.Join("public", "kinship", Info.Token)
+		os.MkdirAll(workdir, 0755)
+		info := r.FormValue("info")
+		infoPath := filepath.Join(workdir, "info")
+		infoF, err := os.Create(infoPath)
+		simple_util.CheckErr(err)
+		fmt.Fprint(infoF, info)
+		fmt.Print(info,"\n")
+		simple_util.CheckErr(infoF.Close())
+		script := filepath.Join("src", "kinship.py")
+		var cmd = []string{
+			script, infoPath, filepath.Join(exPath, workdir),}
+		err = simple_util.RunCmd("python", cmd...)
+		if err != nil {
+			log.Println(cmd)
+			log.Println(err)
+		} else {
+			http.Redirect(w, r, filepath.Join(workdir,  "kinship"), http.StatusSeeOther)
+		}
+	} else {
+		t.ExecuteTemplate(w, "kinship", Info)
+	}
+}
+
+func triploid(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "Kinship"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["triploid"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		path := r.FormValue("path")
+		workdir := filepath.Join("public", "triploid", Info.Token)
+		os.MkdirAll(workdir, 0755)
+		var cmd = []string{
+			"src/triploid.sh",
+			path,
+			workdir,
+		}
+		err = simple_util.RunCmd("bash", cmd...)
+		if err != nil {
+			log.Println(cmd)
+			log.Println(err)
+		} else {
+			http.Redirect(w, r, workdir, http.StatusSeeOther)
+		}
+	} else {
+		t.ExecuteTemplate(w, "triploid", Info)
+	}
+}
+
+func contamination(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "Kinship"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["contamination"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		path := r.FormValue("path")
+		workdir := filepath.Join("public", "contamination", Info.Token)
+		os.MkdirAll(workdir, 0755)
+		var cmd = []string{
+			"src/contamination.sh",
+			path,
+			workdir,
+		}
+		err = simple_util.RunCmd("bash", cmd...)
+		if err != nil {
+			log.Println(cmd)
+			log.Println(err)
+		} else {
+			http.Redirect(w, r, workdir, http.StatusSeeOther)
+		}
+	} else {
+		t.ExecuteTemplate(w, "contamination", Info)
+	}
+}
+func qingdaoWGS(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "青岛WGS"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["qingdaoWGS"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		//new function
+	} else {
+		t.ExecuteTemplate(w, "qingdaoWGS", Info)
+	}
+}
+
+func drug_report(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "药物报告系统"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["drug_report"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		//new function
+	} else {
+		t.ExecuteTemplate(w, "drug_report", Info)
+	}
+}
+func thalassemia_report(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "地贫报告系统"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["thalassemia_report"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		//new function
+	} else {
+		t.ExecuteTemplate(w, "thalassemia_report", Info)
+	}
+}
+
+func deaf_report(w http.ResponseWriter, r *http.Request) {
+        fmt.Println("method:", r.Method)
+        t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+        simple_util.CheckErr(err)
+        var Info Infos
+        Info.Title = "耳聋报告系统"
+        Info.Token = createToken()
+        Info.User,Info.Permission = getUser(r)
+        if !get_permission(r,Permission["deaf_report"]) {
+                fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+                return
+        }
+        if r.Method == "POST" {
+                r.ParseMultipartForm(32 << 20)
+                logRequest(r)
+                //new function
+        } else {
+                t.ExecuteTemplate(w, "deaf_report", Info)
+        }
+}
+
+func changsha_deaf(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "长沙耳聋信息分析"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["changsha_deaf"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		//new function
+	} else {
+		t.ExecuteTemplate(w, "changsha_deaf", Info)
+	}
+}
+
+func tianjin_deaf(w http.ResponseWriter, r *http.Request) {
+        fmt.Println("method:", r.Method)
+        t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+        simple_util.CheckErr(err)
+        var Info Infos
+        Info.Title = "天津耳聋信息分析"
+        Info.Token = createToken()
+        Info.User,Info.Permission = getUser(r)
+        if !get_permission(r,Permission["tianjin_deaf"]) {
+                fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+                return
+        }
+        if r.Method == "POST" {
+                r.ParseMultipartForm(32 << 20)
+                logRequest(r)
+                //new function
+        } else {
+                t.ExecuteTemplate(w, "tianjin_deaf", Info)
+        }
+}
+func shenzhen_deaf(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "深圳耳聋信息分析"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["shenzhen_deaf"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		//new function
+	} else {
+		t.ExecuteTemplate(w, "shenzhen_deaf", Info)
+	}
+}
+
+func shenzhen_thalassemia(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "深圳地贫信息分析"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["shenzhen_thalassemia"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		//new function
+	} else {
+		t.ExecuteTemplate(w, "shenzhen_thalassemia", Info)
+	}
+}
+func Nifty3(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "Nifty3"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["Nifty3"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		//new function
+	} else {
+		t.ExecuteTemplate(w, "Nifty3", Info)
+	}
+}
+
+func new(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("method:", r.Method)
+	t, err := template.ParseFiles(templatePath+"header.html", templatePath+"footer.html" , templatePath + "toolkit.html")
+	simple_util.CheckErr(err)
+	var Info Infos
+	Info.Title = "Kinship"
+	Info.Token = createToken()
+	Info.User,Info.Permission = getUser(r)
+	if !get_permission(r,Permission["new"]) {
+		fmt.Fprintf(w, "<script>alert('无权使用此网页');window.location.href = '/';</script>")
+		return
+	}
+	if r.Method == "POST" {
+		r.ParseMultipartForm(32 << 20)
+		logRequest(r)
+		//new function
+	} else {
+		t.ExecuteTemplate(w, "new", Info)
+	}
+}
+

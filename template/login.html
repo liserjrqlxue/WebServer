@@ -1,0 +1,54 @@
+{{define "login"}}
+{{template "header" .}}
+<div class="jumbotron">
+        <div class="container">
+            <h1 class="display-3">信息分析及解读工具合集</h1>
+            <p>网页部分功能模块需要登录才能使用，目前暂不开放公开注册功能，如需注册账号，请联系叶浩东(yehaodong@genomics.cn)。</p>
+        </div>
+</div>
+<h3 style="text-align: center">用户登录</h3>
+<div align="center"><p style="color:red">{{.Message}}</p></div>
+<form class="container col-sm-3" action="/login" method="post" >
+      <label for="inputEmail" class="sr-only">Email address</label>
+      <input type="username" id="username" name="username" class="form-control" placeholder="Username" required autofocus>
+      <label for="inputPassword" class="sr-only">Password</label>
+      <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
+		<div class="checkbox mb-3">
+			<label>
+			<input type="checkbox" value="remember-me"> Remember me
+			</label>
+		</div>
+		<td colspan="2">
+                <input class="btn btn-primary col-sm-5" type="submit" value="登录"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <input class="btn btn-primary col-sm-5" onclick='location.href=("/change_password")' type="reset" value="修改密码"/>
+		</td>
+</form>
+{{end}}
+
+{{define "change_password"}}
+{{template "header" .}}
+<h3 style="text-align: center">用户修改密码</h3>
+<div align="center"><p style="color:red">{{.Message}}</p></div>
+<form class="container" action="/change_password" method="post" >
+    <table class="container col-sm-5" border="1" cellpadding="10" style="margin: 0px auto">
+        <tr>
+            <td align="center">用户名</td>
+            <td><input class="col-sm-12" type="text" name="username"/></td>
+        </tr>
+        <tr>
+            <td align="center">密&nbsp;码</td>
+            <td><input class="col-sm-12" type="password" name="password"/></td>
+        </tr>
+		<tr>
+            <td align="center">新密码</td>
+            <td><input class="col-sm-12" type="password" name="new_password"/></td>
+        </tr>
+        <tr align="center">
+            <td colspan="2">
+                <input class="btn btn-primary col-sm-5" type="submit" value="修改"/>
+            </td>
+        </tr>
+    </table>
+</form>
+{{template "footer" .}}
+{{end}}

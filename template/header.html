@@ -14,9 +14,27 @@
         padding-top: 70px;
     }
 </style>
+<script src="/static/js/jquery-3.3.1.js"></script>
+<script src="/static/js/tab.js"></script>
+<script src="/static/js/util.js"></script>
+<script>
+window.onload=function(){
+	group = {{.Permission}}.split(',')
+	for ( var i = 0; i <group.length; i++){
+		if (document.getElementById(group[i])){
+			document.getElementById(group[i]).className = '';
+		}
+	}
+	if (document.getElementById("user").innerHTML != "未登录"){
+		document.getElementById("login").text = '更换账户'
+		document.getElementById("login2").text = '更换账户'
+	}
+
+}
+</script>
 <body>
 <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-    <a class="navbar-brand" href="#">Navbar</a>
+    <a class="navbar-brand" href="/">Toolkit</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
@@ -27,19 +45,13 @@
                 <a class="nav-link" href="/">Home<span class="sr-only">Home</span></a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/autoReport">报告自动化<span class="sr-only">报告自动化</span></a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/datatables">生育研发MO<span class="sr-only">生育研发MO</span></a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/plotReadsLocal">本地集群画reads图<span class="sr-only">本地集群画reads图</span></a>
+                <a class="nav-link" id="login" href="/login" >登录<span class="sr-only">登录</span></a>
             </li>
         </ul>
         <form class="form-inline my-2 my-lg-0">
-            <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search"/>
-            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+			<span  style="color:white;width:200px" id="user" name="user" align="right" >{{.User}}</span>
         </form>
     </div>
 </nav>
+
 {{end}}
